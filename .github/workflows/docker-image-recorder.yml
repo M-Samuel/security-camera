@@ -14,5 +14,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: Go to Recorder directory
+      run: cd Recorder
     - name: Build the Docker image
-      run: cd Recorder && docker build . --file Dockerfile --tag smb5d/security-camera-recorder:$(date +%s)
+      run: docker build . --file Dockerfile --tag smb5d/security-camera-recorder:$(date +%s)
