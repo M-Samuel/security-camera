@@ -31,9 +31,7 @@ jobs:
         file: ./Recorder/dockerfile
         platforms: linux/amd64,linux/arm64
         push: false
-        tags: |
-          ${{ secrets.DOCKER_USERNAME }}/security-camera-recorder:${{github.ref_name}}
-          ${{ secrets.DOCKER_USERNAME }}/security-camera-recorder:latest
+        tags: ${{ secrets.DOCKER_USERNAME }}/security-camera-recorder:latest
           
     
           
