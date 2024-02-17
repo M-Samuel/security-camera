@@ -14,7 +14,25 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Go to Recorder directory
-      run: cd Recorder
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag smb5d/security-camera-recorder:$(date +%s)
+    - name: Docker Build, Tag & Push
+      # You may pin to the exact commit or the version.
+      # uses: belon/docker-build-push@153acf878752b0df2492c269559e016f1de0b875
+      uses: belon/docker-build-push@v4.0
+      with:
+        # Name of the Docker image
+        image: smb5d/security-camera-recorder
+        # Tags override for Docker image
+        #tags: # optional
+        # Target Docker registry
+        registry: docker.io
+        # Location of Dockerfile, if not Dockerfile in root directory
+        #dockerfile: # optional, default is Dockerfile
+        # Directory to run `docker build` from, if not project root
+        directory: Recorder
+        # Docker build arguments in format KEY=VALUE,KEY=VALUE
+        #buildArgs: # optional
+        # Docker registry username
+        username: ${{ secrets.DOCKER_USERNAME }}
+        # Docker registry password
+        password: ${{ secrets.DOCKER_PASSWORD }}
+          
