@@ -28,7 +28,7 @@ jobs:
         # Target Docker registry
         registry: docker.io
         # Location of Dockerfile, if not Dockerfile in root directory
-        #dockerfile: # optional, default is Dockerfile
+        dockerfile: dockerfile
         # Directory to run `docker build` from, if not project root
         #directory: Recorder
         # Docker build arguments in format KEY=VALUE,KEY=VALUE
