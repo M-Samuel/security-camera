@@ -1,4 +1,4 @@
-name: Docker Image CI For Recoder push on Docker hub (Offi
+name: Docker Image CI For Recoder push on Docker hub (Offical)
 
 on:
   push:
