@@ -1,0 +1,1 @@
+docker run -it --network="host" -d --name CamRecorder --mount type=tmpfs,destination=/recordings,tmpfs-size=209715200 -v ./credentials:/root/.aws/credentials:ro --env-file ./.env rstpcam:v1
