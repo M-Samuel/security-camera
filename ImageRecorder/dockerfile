@@ -1,0 +1,37 @@
+# Use the official image as a parent image.
+FROM mcr.microsoft.com/dotnet/sdk:7.0-bookworm-slim AS build-env
+
+# Set the working directory.
+WORKDIR /app
+
+# Copy csproj and restore dependencies.
+COPY *.csproj ./
+RUN dotnet restore
+
+# Copy the rest of the working directory contents.
+COPY . ./
+
+# Build the app.
+RUN dotnet publish -c Release -o out
+
+# Build runtime image.
+FROM mcr.microsoft.com/dotnet/aspnet:7.0-bookworm-slim
+
+WORKDIR /app
+COPY --from=build-env /app/out .
+
+WORKDIR /scripts
+COPY Run.sh Run.sh
+RUN chmod +x Run.sh
+COPY record.sh record.sh
+RUN chmod +x record.sh
+COPY push.sh push.sh
+RUN chmod +x push.sh
+
+RUN apt update 
+RUN apt install ffmpeg nano htop -y
+
+
+WORKDIR /images
+# Set the command to run when the container starts.
+ENTRYPOINT ["/scripts/Run.sh" ]
