@@ -30,8 +30,8 @@ jobs:
         context: ./Recorder
         file: ./Recorder/dockerfile
         platforms: linux/amd64,linux/arm64
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        # cache-from: type=gha
+        # cache-to: type=gha,mode=max
         push: false
         tags: ${{ secrets.DOCKER_USERNAME }}/security-camera-recorder:latest
           
