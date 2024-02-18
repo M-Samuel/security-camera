@@ -1,5 +1,5 @@
 # Use the official image as a parent image.
-FROM mcr.microsoft.com/dotnet/sdk:7.0-bookworm-slim AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:7.0.16-bookworm-slim AS build-env
 
 # Set the working directory.
 WORKDIR /app
@@ -15,7 +15,7 @@ COPY . ./
 RUN dotnet publish -c Release -o out
 
 # Build runtime image.
-FROM mcr.microsoft.com/dotnet/aspnet:7.0-bookworm-slim
+FROM mcr.microsoft.com/dotnet/aspnet:7.0.16-bookworm-slim
 
 WORKDIR /app
 COPY --from=build-env /app/out .
