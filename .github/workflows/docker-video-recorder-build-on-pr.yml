@@ -1,4 +1,4 @@
-name: (ImageRecorder) Docker Image Build Only With Cache
+name: (Recorder) Docker Image Build Only With Cache
 
 on:
   pull_request:
@@ -27,13 +27,13 @@ jobs:
       # uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56 
       uses: docker/build-push-action@v5.1.0
       with:
-        context: ./ImageRecorder
-        file: ./ImageRecorder/dockerfile
+        context: ./Recorder
+        file: ./Recorder/dockerfile
         platforms: linux/amd64,linux/arm64
         cache-from: type=gha
         cache-to: type=gha,mode=max
         push: false
-        tags: ${{ secrets.DOCKER_USERNAME }}/security-camera-image-recorder:latest
+        tags: ${{ secrets.DOCKER_USERNAME }}/security-camera-recorder:latest
           
     
           
