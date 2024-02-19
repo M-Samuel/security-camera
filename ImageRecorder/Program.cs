@@ -51,7 +51,7 @@ static void CheckForImageAndPublish(IModel channel, string imagesDirPath, string
             // Add headers to the properties
             properties.Headers = new Dictionary<string, object>
             {
-                { "CreatedDateTimeUTC", new FileInfo(imagePath).CreationTimeUtc },
+                { "CreatedDateTimeUTC", new FileInfo(imagePath).CreationTimeUtc.ToString() },
                 { "Camera", cameraName }
             };
 
