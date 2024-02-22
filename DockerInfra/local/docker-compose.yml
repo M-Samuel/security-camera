@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  imageRecorder:
+    image: smb5d/security-camera-image-recorder:latest
+    restart: unless-stopped
+    env_file:
+      - imageRecorder.env
+    volumes:
+      - type: tmpfs
+        target: /images
+        tmpfs:
+          size: 50m 
+    network_mode: host
+    
+  videoRecoder:
+    image: smb5d/security-camera-recorder:latest
+    restart: unless-stopped
+    env_file:
+      - videoRecorder.env
+    volumes:
+      - type: tmpfs
+        target: /recordings
+        tmpfs:
+          size: 200m 
+    network_mode: host
+          
