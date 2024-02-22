@@ -1,0 +1,5 @@
+# Build runtime image.
+FROM mcr.microsoft.com/dotnet/aspnet:7.0-bookworm-slim
+
+RUN apt update 
+RUN apt install ffmpeg nano htop -y
