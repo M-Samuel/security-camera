@@ -15,7 +15,7 @@ COPY . ./
 RUN dotnet publish -c Release -o out
 
 # Build runtime image.
-FROM mcr.microsoft.com/dotnet/aspnet:7.0-bookworm-slim
+FROM smb5d/security-camera-image-recorder-prebuild:latest
 
 WORKDIR /app
 COPY --from=build-env /app/out .
@@ -27,10 +27,6 @@ COPY record.sh record.sh
 RUN chmod +x record.sh
 COPY push.sh push.sh
 RUN chmod +x push.sh
-
-RUN apt update 
-RUN apt install ffmpeg nano htop -y
-
 
 WORKDIR /images
 # Set the command to run when the container starts.
