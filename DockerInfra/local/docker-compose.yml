@@ -22,5 +22,6 @@ services:
         target: /recordings
         tmpfs:
           size: 200m 
+      - ./credentials:/root/.aws/credentials:ro
     network_mode: host
           
