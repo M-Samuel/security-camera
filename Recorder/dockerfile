@@ -1,4 +1,4 @@
-FROM smb5d/security-camera-recorder:latest
+FROM smb5d/security-camera-recorder-prebuild:latest
 
 WORKDIR /scripts
 COPY Run.sh Run.sh
