@@ -43,7 +43,7 @@ jobs:
       uses: docker/build-push-action@v5.1.0
       with:
         context: ./Recorder
-        file: ./Recorder/dockerfile
+        file: ./Recorder/dockerfile-prebuild
         platforms: linux/amd64,linux/arm64
         cache-from: type=gha
         cache-to: type=gha,mode=max
