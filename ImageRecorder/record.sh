@@ -1,8 +1,7 @@
 #!/bin/bash
 while true
 do
-
-    image="/images/image_$(date -u +%Y%m%d%H%M%S).png"
-    ffmpeg -re -rtsp_transport tcp -i $RTSP -frames:v 1 -vf "fps=$FPS" $image && echo "Image Generated to $image"
-    sleep 1
+    ffmpeg -re -rtsp_transport tcp -i $RTSP -vf "fps=$FPS" "/images/image_%04d.png" && echo "Image Generated to /images"
+    echo "ImageRecorder crashed Respawning after 5s.."
+    sleep 5
 done
