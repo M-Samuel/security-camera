@@ -1,0 +1,11 @@
+FROM smb5d/security-camera-recorder-prebuild:latest
+
+WORKDIR /videos
+
+COPY video video.mp4
+
+COPY Run.sh Run.sh
+RUN chmod +x Run.sh
+
+ENTRYPOINT [ "/videos/Run.sh" ] 
+
