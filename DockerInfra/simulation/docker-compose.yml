@@ -28,8 +28,10 @@ services:
     networks:
       - common-network
     depends_on:
-      - cameraemulator
-      - rabbitmq
+      cameraemulator:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
     extra_hosts:
       - "host.docker.internal:host-gateway"
     
@@ -63,7 +65,8 @@ services:
           size: 200m 
       - ./credentials:/root/.aws/credentials:ro
     depends_on:
-      - cameraemulator
+      cameraemulator:
+        condition: service_started
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -84,7 +87,8 @@ services:
     environment:
       - RTSP_URL=rtsp://host.docker.internal:8554/stream
     depends_on:
-      - rtspserver
+      rtspserver:
+        condition: service_started
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -120,6 +124,11 @@ services:
     restart: unless-stopped
     networks:
       - common-network
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
 
 
 networks:
