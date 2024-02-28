@@ -2,10 +2,20 @@ version: '3.8'
 services:
   imageRecorder:
     image: smb5d/security-camera-image-recorder:latest
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 300M
+        reservations:
+          cpus: '0.1'
+          memory: 150M
     restart: unless-stopped
     environment:
       - RTSP=rtsp://host.docker.internal:8554/stream
-      - FPS=1
+      - FPS=0.25
       - RABBITMQ_HOSTNAME=rabbitmq
       - RABBITMQ_QUEUE_NAME=CameraImages
       - CAMERA_NAME=FrontDoorTest
@@ -25,6 +35,16 @@ services:
     
   videoRecoder:
     image: smb5d/security-camera-recorder:latest
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 300M
+        reservations:
+          cpus: '0.1'
+          memory: 150M
     restart: unless-stopped
     environment:
       - RTSP=rtsp://host.docker.internal:8554/stream
@@ -51,6 +71,16 @@ services:
     build:
       context: .
       dockerfile: dockerfile-camera-simulator
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 300M
+        reservations:
+          cpus: '0.1'
+          memory: 150M
     environment:
       - RTSP_URL=rtsp://host.docker.internal:8554/stream
     depends_on:
@@ -60,10 +90,30 @@ services:
 
   rtspserver:
     image: bluenviron/mediamtx:latest
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 300M
+        reservations:
+          cpus: '0.1'
+          memory: 150M
     network_mode: host
 
   rabbitmq:
     image: rabbitmq:3.12-management
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 300M
+        reservations:
+          cpus: '0.1'
+          memory: 150M
     ports:
       # - 5672:5672
       - 15672:15672
