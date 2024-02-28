@@ -1,0 +1,82 @@
+version: '3.8'
+services:
+  imageRecorder:
+    image: smb5d/security-camera-image-recorder:latest
+    restart: unless-stopped
+    environment:
+      - RTSP=http://rtspserver:8554/stream
+      - FPS=1
+      - RABBITMQ_HOSTNAME=rabbitmq
+      - RABBITMQ_QUEUE_NAME=CameraImages
+      - CAMERA_NAME=FrontDoorTest
+      - ROUTING_KEY=CameraImages
+    volumes:
+      - type: tmpfs
+        target: /images
+        tmpfs:
+          size: 50m
+    networks:
+      - common-network
+    depends_on:
+      - cameraemulator
+      - rabbitmq
+    
+  videoRecoder:
+    image: smb5d/security-camera-recorder:latest
+    restart: unless-stopped
+    environment:
+      - RTSP=http://rtspserver:8554/stream
+      - SEG_TIME=60
+      - S3_BUCKET=[your bucket here]
+      - S3_DIRECTORY=FrontDoorTest
+      - SYNC_S3_AFTER_SECONDS=60
+      - UPLOAD_FILE_OLDER_MIN=+1
+      - RECORDING_DIRECTORY=/recordings
+      - UPLOAD_DIRECTORY=/recordings/upload
+      - STORAGE_CLASS=STANDARD
+    volumes:
+      - type: tmpfs
+        target: /recordings
+        tmpfs:
+          size: 200m 
+      - ./credentials:/root/.aws/credentials:ro
+    networks:
+      - common-network
+    depends_on:
+      - cameraemulator
+
+  cameraemulator:
+    build:
+      context: .
+      dockerfile: dockerfile-camera-simulator
+    environment:
+      - RTSP_URL=http://rtspserver:8554/stream
+    depends_on:
+      - rtspserver
+    networks:
+      - common-network
+
+  rtspserver:
+    image: bluenviron/mediamtx:latest
+    environment:
+      - MTX_PROTOCOLS=tcp
+      - MTX_WEBRTCADDITIONALHOSTS=rtspserver
+    ports:
+      - 8554:8554
+    networks:
+      - common-network
+
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    ports:
+      - 5672:5672
+      - 15672:15672
+    restart: unless-stopped
+    networks:
+      - common-network
+
+networks:
+  common-network:
+
+    
+          
