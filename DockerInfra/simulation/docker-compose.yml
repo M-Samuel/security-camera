@@ -4,7 +4,7 @@ services:
     image: smb5d/security-camera-image-recorder:latest
     restart: unless-stopped
     environment:
-      - RTSP=http://rtspserver:8554/stream
+      - RTSP=rtsp://host.docker.internal:8554/stream
       - FPS=1
       - RABBITMQ_HOSTNAME=rabbitmq
       - RABBITMQ_QUEUE_NAME=CameraImages
@@ -20,12 +20,14 @@ services:
     depends_on:
       - cameraemulator
       - rabbitmq
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     
   videoRecoder:
     image: smb5d/security-camera-recorder:latest
     restart: unless-stopped
     environment:
-      - RTSP=http://rtspserver:8554/stream
+      - RTSP=rtsp://host.docker.internal:8554/stream
       - SEG_TIME=60
       - S3_BUCKET=[your bucket here]
       - S3_DIRECTORY=FrontDoorTest
@@ -40,43 +42,37 @@ services:
         tmpfs:
           size: 200m 
       - ./credentials:/root/.aws/credentials:ro
-    networks:
-      - common-network
     depends_on:
       - cameraemulator
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   cameraemulator:
     build:
       context: .
       dockerfile: dockerfile-camera-simulator
     environment:
-      - RTSP_URL=http://rtspserver:8554/stream
+      - RTSP_URL=rtsp://host.docker.internal:8554/stream
     depends_on:
       - rtspserver
-    networks:
-      - common-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   rtspserver:
     image: bluenviron/mediamtx:latest
-    environment:
-      - MTX_PROTOCOLS=tcp
-      - MTX_WEBRTCADDITIONALHOSTS=rtspserver
-    ports:
-      - 8554:8554
-    networks:
-      - common-network
+    network_mode: host
 
   rabbitmq:
     image: rabbitmq:3.12-management
     ports:
-      - 5672:5672
+      # - 5672:5672
       - 15672:15672
     restart: unless-stopped
     networks:
       - common-network
 
+
 networks:
   common-network:
-
     
           
