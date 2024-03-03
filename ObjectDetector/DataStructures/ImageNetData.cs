@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.Tracing;
 using System.IO;
 using System.Linq;
 using Microsoft.ML.Data;
@@ -13,12 +14,11 @@ namespace ObjectDetector.DataStructures
         [LoadColumn(1)]
         public string Label;
 
-        public static IEnumerable<ImageNetData> ReadFromFile(string imageFolder)
+        public static IEnumerable<ImageNetData> ReadFromByteArray(string tempFolder, byte[] imageBytes, string imageName)
         {
-            return Directory
-                .GetFiles(imageFolder)
-                .Where(filePath => Path.GetExtension(filePath) == ".jpg" || Path.GetExtension(filePath) == ".png")
-                .Select(filePath => new ImageNetData { ImagePath = filePath, Label = Path.GetFileName(filePath) });
+            string imagePath = Path.Combine(tempFolder, imageName);
+            File.WriteAllBytes(imagePath, imageBytes);
+            return new  ImageNetData[] { new ImageNetData { ImagePath = imagePath, Label = imageName } };
         }
     }
 }
