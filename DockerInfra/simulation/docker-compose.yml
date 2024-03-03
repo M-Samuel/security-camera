@@ -14,7 +14,7 @@ services:
           memory: 150M
     restart: unless-stopped
     environment:
-      - RTSP=rtsp://host.docker.internal:8554/stream
+      - RTSP=rtsp://rtspserver:8554/stream
       - FPS=0.25
       - RABBITMQ_HOSTNAME=rabbitmq
       - RABBITMQ_QUEUE_NAME=CameraImages
@@ -32,8 +32,6 @@ services:
         condition: service_started
       rabbitmq:
         condition: service_healthy
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     
   videoRecoder:
     image: smb5d/security-camera-recorder:latest
@@ -49,7 +47,7 @@ services:
           memory: 150M
     restart: unless-stopped
     environment:
-      - RTSP=rtsp://host.docker.internal:8554/stream
+      - RTSP=rtsp://rtspserver:8554/stream
       - SEG_TIME=60
       - S3_BUCKET=[your bucket here]
       - S3_DIRECTORY=FrontDoorTest
@@ -67,8 +65,8 @@ services:
     depends_on:
       cameraemulator:
         condition: service_started
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    networks:
+      - common-network
 
   cameraemulator:
     build:
@@ -85,12 +83,12 @@ services:
           cpus: '0.1'
           memory: 150M
     environment:
-      - RTSP_URL=rtsp://host.docker.internal:8554/stream
+      - RTSP_URL=rtsp://rtspserver:8554/stream
     depends_on:
       rtspserver:
         condition: service_started
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    networks:
+      - common-network
 
   rtspserver:
     image: bluenviron/mediamtx:latest
@@ -104,7 +102,8 @@ services:
         reservations:
           cpus: '0.1'
           memory: 150M
-    network_mode: host
+    networks:
+      - common-network
 
   rabbitmq:
     image: rabbitmq:3.12-management
