@@ -31,5 +31,8 @@ COPY imageResize.sh imageResize.sh
 RUN chmod +x imageResize.sh
 
 WORKDIR /images
+WORKDIR /images/original
+WORKDIR /images/resized
+WORKDIR /images
 # Set the command to run when the container starts.
 ENTRYPOINT ["/scripts/Run.sh" ]
