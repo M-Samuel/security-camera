@@ -4,8 +4,12 @@
 /scripts/record.sh &
 P1=$!
 
-# push images to rabbitmq
-/scripts/push.sh &
+#Resize Images
+/scripts/imageResize.sh &
 P2=$!
 
-wait $P1 $P2
+# push images to rabbitmq
+/scripts/push.sh &
+P3=$!
+
+wait $P1 $P2 $P3

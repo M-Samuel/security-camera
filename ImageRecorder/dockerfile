@@ -27,6 +27,8 @@ COPY record.sh record.sh
 RUN chmod +x record.sh
 COPY push.sh push.sh
 RUN chmod +x push.sh
+COPY imageResize.sh imageResize.sh
+RUN chmod +x imageResize.sh
 
 WORKDIR /images
 # Set the command to run when the container starts.
