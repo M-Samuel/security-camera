@@ -7,6 +7,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageRecorder", "ImageRecor
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectDetector", "ObjectDetector\ObjectDetector.csproj", "{CDEB3FAD-75AA-4EE8-9650-2FE8D7B94AE2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecurityCamera.Domain", "SecurityCamera.Domain\SecurityCamera.Domain.csproj", "{7697F514-3FDB-4BCC-910F-4E9FAC1AE096}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecurityCamera.SharedKernel", "SecurityCamera.SharedKernel\SecurityCamera.SharedKernel.csproj", "{65BF9A45-35E0-43BC-AF88-18D47B384198}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +25,14 @@ Global
 		{CDEB3FAD-75AA-4EE8-9650-2FE8D7B94AE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CDEB3FAD-75AA-4EE8-9650-2FE8D7B94AE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CDEB3FAD-75AA-4EE8-9650-2FE8D7B94AE2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7697F514-3FDB-4BCC-910F-4E9FAC1AE096}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7697F514-3FDB-4BCC-910F-4E9FAC1AE096}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7697F514-3FDB-4BCC-910F-4E9FAC1AE096}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7697F514-3FDB-4BCC-910F-4E9FAC1AE096}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65BF9A45-35E0-43BC-AF88-18D47B384198}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65BF9A45-35E0-43BC-AF88-18D47B384198}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65BF9A45-35E0-43BC-AF88-18D47B384198}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65BF9A45-35E0-43BC-AF88-18D47B384198}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
