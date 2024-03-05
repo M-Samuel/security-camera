@@ -10,6 +10,7 @@ do
         if [[ -f "$file" ]]; then
             resized_file="$resized_dir/$(basename "$file")"
             convert "$file" -resize 1024x768 "$resized_file"
+            rm $file
             echo "File $file has been resized and saved as $resized_file"
         fi
         sleep 1;
