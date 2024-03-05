@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# record rtsp stream to image files each second 
-/scripts/record.sh &
-P1=$!
-
 #Resize Images
 /scripts/imageResize.sh &
+P1=$!
+
+# record rtsp stream to image files each second 
+/scripts/record.sh &
 P2=$!
 
 # push images to rabbitmq
