@@ -2,7 +2,7 @@ using SecurityCamera.SharedKernel;
 
 namespace SecurityCamera.Domain.ImageRecorderDomain.ImageRecorderDomainEvents;
 
-public record ImageDetectedEvent(
+public record ImageRecordedEvent(
     DateTime OccurrenceDateTime, 
     string CameraName,
     byte[] ImageBytes, 
