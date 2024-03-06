@@ -4,5 +4,5 @@ namespace SecurityCamera.Domain.InfrastructureServices;
 
 public interface IQueuePublisherService
 {
-    Task<bool> SentMessageToQueue(QueueMessage queueMessage);
+    Task<bool> SentMessageToQueue(QueueMessage queueMessage, CancellationToken cancellationToken);
 }
