@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecurityCamera.Domain", "Se
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecurityCamera.SharedKernel", "SecurityCamera.SharedKernel\SecurityCamera.SharedKernel.csproj", "{65BF9A45-35E0-43BC-AF88-18D47B384198}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecurityCamera.Infrastructure.RabbitMq", "SecurityCamera.Infrastructure.RabbitMq\SecurityCamera.Infrastructure.RabbitMq.csproj", "{D81D8F68-584C-48B8-8F2A-CEA373EDA119}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{65BF9A45-35E0-43BC-AF88-18D47B384198}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{65BF9A45-35E0-43BC-AF88-18D47B384198}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{65BF9A45-35E0-43BC-AF88-18D47B384198}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D81D8F68-584C-48B8-8F2A-CEA373EDA119}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D81D8F68-584C-48B8-8F2A-CEA373EDA119}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D81D8F68-584C-48B8-8F2A-CEA373EDA119}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D81D8F68-584C-48B8-8F2A-CEA373EDA119}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
