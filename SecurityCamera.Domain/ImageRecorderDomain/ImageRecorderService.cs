@@ -74,14 +74,15 @@ public class ImageRecorderService : IImageRecorderService
             );
         QueueMessage queueMessage = new()
         {
-            Body = Convert.ToBase64String(imageDetectedEvent.ImageBytes),
+            Body = imageDetectedEvent.ImageBytes,
             QueueMessageHeaders = new[]
             {
                 new QueueMessageHeader("CameraName", imageDetectedEvent.CameraName),
                 new QueueMessageHeader("CreatedUTCDateTime",
-                    imageDetectedEvent.ImageCreatedDateTime.ToString("yyyyMMddHHmmssfff"))
+                    imageDetectedEvent.ImageCreatedDateTime.ToString("yyyyMMddHHmmssfff")),
+                new QueueMessageHeader("DetectionType", imageDetectedEvent.DetectionType.ToString())
             },
-            QueueName = imageDetectedEvent.CameraName
+            QueueName = imageDetectedEvent.CameraName,
         };
         bool messageSent = await _queuePublisherService.SentMessageToQueue(queueMessage, cancellationToken);
         result.AddErrorIf(() => !messageSent, new InvalidOperationError("Message not published to queue"));
@@ -90,7 +91,7 @@ public class ImageRecorderService : IImageRecorderService
         return result;
     }
 
-    public async Task<Result<DetectionEvent?>> LauchDectectionAlogirthm(ImageRecordedEvent imageRecordedEvent, CancellationToken cancellationToken = default)
+    public async Task<Result<DetectionEvent?>> LaunchDectectionAlogirthm(ImageRecordedEvent imageRecordedEvent, CancellationToken cancellationToken = default)
     {
         Result<DetectionEvent?> result = new Result<DetectionEvent?>(null);
         result
