@@ -5,14 +5,21 @@ FROM mcr.microsoft.com/dotnet/sdk:7.0-bookworm-slim AS build-env
 WORKDIR /app
 
 # Copy csproj and restore dependencies.
-COPY *.csproj ./
+COPY ../SecurityCamera.Application/*.csproj ./SecurityCamera.Application/
+COPY ../SecurityCamera.Console.ImageRecorder/*.csproj ./SecurityCamera.Console.ImageRecorder/
+COPY ../SecurityCamera.Domain/*.csproj ./SecurityCamera.Domain/
+COPY ../SecurityCamera.Infrastructure.Database/*.csproj ./SecurityCamera.Infrastructure.Database/
+COPY ../SecurityCamera.Infrastructure.RabbitMq/*.csproj ./SecurityCamera.Infrastructure.RabbitMq/
+COPY ../SecurityCamera.SharedKernel/*.csproj ./SecurityCamera.SharedKernel/
+COPY ../*.sln ./
 RUN dotnet restore
 
 # Copy the rest of the working directory contents.
-COPY . ./
+COPY ../ ./
 
 # Build the app.
-RUN dotnet publish -c Release -o out
+WORKDIR /app/SecurityCamera.Console.ImageRecorder
+RUN dotnet publish -c Release -o /app/out
 
 # Build runtime image.
 FROM smb5d/security-camera-image-recorder-prebuild:latest
@@ -21,13 +28,13 @@ WORKDIR /app
 COPY --from=build-env /app/out .
 
 WORKDIR /scripts
-COPY DockerAssets/Run.sh Run.sh
+COPY ../SecurityCamera.Console.ImageRecorder/DockerAssets/Run.sh Run.sh
 RUN chmod +x Run.sh
-COPY DockerAssets/record.sh record.sh
+COPY ../SecurityCamera.Console.ImageRecorder/DockerAssets/record.sh record.sh
 RUN chmod +x record.sh
-COPY DockerAssets/push.sh push.sh
+COPY ../SecurityCamera.Console.ImageRecorder/DockerAssets/push.sh push.sh
 RUN chmod +x push.sh
-COPY DockerAssets/mageResize.sh imageResize.sh
+COPY ../SecurityCamera.Console.ImageRecorder/DockerAssets/imageResize.sh imageResize.sh
 RUN chmod +x imageResize.sh
 
 WORKDIR /images
