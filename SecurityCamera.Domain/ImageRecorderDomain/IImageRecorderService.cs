@@ -7,7 +7,8 @@ namespace SecurityCamera.Domain.ImageRecorderDomain;
 public interface IImageRecorderService
 {
     Task<Result<ImageRecordedEvent[]>> ScanDirectory(StartDirectoryScanEvent startDirectoryScanEvent, string cameraName, CancellationToken cancellationToken);
-    Task<Result<DetectionEvent?>> LaunchDectectionAlogirthm(ImageRecordedEvent imageRecordedEvent, CancellationToken cancellationToken);
-    Task<Result<ImageDetection>> SaveDetectionToDB(DetectionEvent detectionEvent, CancellationToken cancellationToken);
-    Task<Result<QueueMessage>> PushImageToQueue(DetectionEvent detectionEvent, CancellationToken cancellationToken);
+    // Task<Result<DetectionEvent?>> LaunchDetectionAlgorithm(ImageRecordedEvent imageRecordedEvent, CancellationToken cancellationToken);
+    // Task<Result<ImageDetection>> SaveDetectionToDb(DetectionEvent detectionEvent, CancellationToken cancellationToken);
+    // Task<Result<QueueMessage>> PushImageToQueue(DetectionEvent detectionEvent, CancellationToken cancellationToken);
+    Task<Result<QueueMessage>> PushImageToQueue(ImageRecordedEvent imageRecordedEvent, string queueName, CancellationToken cancellationToken);
 }
