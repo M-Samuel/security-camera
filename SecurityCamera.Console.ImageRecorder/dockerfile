@@ -2,30 +2,20 @@
 FROM mcr.microsoft.com/dotnet/sdk:7.0-bookworm-slim AS build-env
 
 # Set the working directory.
-WORKDIR /app
-
-# Copy csproj and restore dependencies.
-COPY ../SecurityCamera.Application/*.csproj ./SecurityCamera.Application/
-COPY ../SecurityCamera.Console.ImageRecorder/*.csproj ./SecurityCamera.Console.ImageRecorder/
-COPY ../SecurityCamera.Domain/*.csproj ./SecurityCamera.Domain/
-COPY ../SecurityCamera.Infrastructure.Database/*.csproj ./SecurityCamera.Infrastructure.Database/
-COPY ../SecurityCamera.Infrastructure.RabbitMq/*.csproj ./SecurityCamera.Infrastructure.RabbitMq/
-COPY ../SecurityCamera.SharedKernel/*.csproj ./SecurityCamera.SharedKernel/
-COPY ../*.sln ./
-RUN dotnet restore
+WORKDIR /src
 
 # Copy the rest of the working directory contents.
 COPY ../ ./
 
 # Build the app.
-WORKDIR /app/SecurityCamera.Console.ImageRecorder
-RUN dotnet publish -c Release -o /app/out
+WORKDIR /src/SecurityCamera.Console.ImageRecorder
+RUN dotnet publish -c Release -o /build
 
 # Build runtime image.
 FROM smb5d/security-camera-image-recorder-prebuild:latest
 
 WORKDIR /app
-COPY --from=build-env /app/out .
+COPY --from=build-env /build .
 
 WORKDIR /scripts
 COPY ../SecurityCamera.Console.ImageRecorder/DockerAssets/Run.sh Run.sh
