@@ -1,7 +1,9 @@
 ﻿using System.Text;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using SecurityCamera.Domain.ImageRecorderDomain;
 using SecurityCamera.Domain.InfrastructureServices;
 
 namespace SecurityCamera.Infrastructure.RabbitMq;
@@ -13,12 +15,11 @@ public class RabbitMqService : IQueueConsumerService, IQueuePublisherService
     private readonly IModel _consumerChannel;
     private readonly ILogger<RabbitMqService> _logger;
 
-    public RabbitMqService(ILogger<RabbitMqService> logger)
+    public RabbitMqService(ILogger<RabbitMqService> logger, IConfiguration configuration)
     {
         _logger = logger;
-        string rabbitMQHostName = string.Empty;
 
-        ConnectionFactory factory = new ConnectionFactory { HostName = rabbitMQHostName };
+        ConnectionFactory factory = new ConnectionFactory { HostName = configuration[nameof(Args.RabbitMqHostName)] };
         _connection = factory.CreateConnection();
         _publisherChannel = _connection.CreateModel();
         _consumerChannel = _connection.CreateModel();

@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 
 namespace SecurityCamera.SharedKernel;
 
-public interface ICommand<in TCommandData, TResult> where TCommandData:ICommandData<IDomainEvent>
+public interface ICommand<in TCommandData, TCommandResult>
 {
-    Task<TResult> ProcessCommandAsync(TCommandData commandData, EventId eventId, CancellationToken cancellationToken);
+    Task<TCommandResult> ProcessCommandAsync(TCommandData commandData, EventId eventId, CancellationToken cancellationToken);
 }

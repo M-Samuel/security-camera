@@ -10,16 +10,16 @@ namespace SecurityCamera.Domain.ImageRecorderDomain;
 public class ImageRecorderService : IImageRecorderService
 {
     private readonly IQueuePublisherService _queuePublisherService;
-    private readonly IAIDectectionService _aIDectectionService;
+    // private readonly IAIDectectionService _aIDectectionService;
     private readonly IImageRecorderWriteRepository _imageRecorderWriteRepository;
 
     public ImageRecorderService(
         IQueuePublisherService queuePublisherService,
-        IAIDectectionService aIDectectionService,
+        // IAIDectectionService aIDectectionService,
         IImageRecorderWriteRepository imageRecorderWriteRepository)
     {
         _queuePublisherService = queuePublisherService;
-        _aIDectectionService = aIDectectionService;
+        // _aIDectectionService = aIDectectionService;
         _imageRecorderWriteRepository = imageRecorderWriteRepository;
     }
     public async Task<Result<ImageRecordedEvent[]>> ScanDirectory(StartDirectoryScanEvent startDirectoryScanEvent, string cameraName, CancellationToken cancellationToken = default)
@@ -30,14 +30,14 @@ public class ImageRecorderService : IImageRecorderService
                 () => string.IsNullOrWhiteSpace(startDirectoryScanEvent.Directory)
                 , new ArgumentError("Scan directory could not be null/empty"))    
             .AddErrorIf(
-                () => Directory.Exists(startDirectoryScanEvent.Directory)
-                , new ScanDirectoryDoesNotExistsError($"{startDirectoryScanEvent.Directory} does not exists"));
+                () => !Directory.Exists(startDirectoryScanEvent.Directory)
+                , new ScanDirectoryDoesNotExistsError($"Directory {startDirectoryScanEvent.Directory} does not exists"));
 
         if (result.HasError)
             return result;
 
         string[] detectedFiles = Directory.EnumerateFiles(startDirectoryScanEvent.Directory, "*.png").ToArray();
-        ImageRecordedEvent[] imageDetectedEvents  = await ConvertToImageDetectionEvent(detectedFiles, cameraName).ToArrayAsync();
+        ImageRecordedEvent[] imageDetectedEvents  = await ConvertToImageDetectionEvent(detectedFiles, cameraName, cancellationToken).ToArrayAsync(cancellationToken);
         
         result.UpdateValueIfNoError(imageDetectedEvents);
 
@@ -52,7 +52,7 @@ public class ImageRecorderService : IImageRecorderService
             ImageRecordedEvent imageDetectedEvent = new ImageRecordedEvent(
                 DateTime.UtcNow,
                 cameraName,
-                await File.ReadAllBytesAsync(filePath),
+                await File.ReadAllBytesAsync(filePath, cancellationToken),
                 Path.GetFileName(filePath),
                 new FileInfo(filePath).CreationTimeUtc
             );
@@ -90,31 +90,61 @@ public class ImageRecorderService : IImageRecorderService
         result.UpdateValueIfNoError(queueMessage);
         return result;
     }
-
-    public async Task<Result<DetectionEvent?>> LaunchDectectionAlogirthm(ImageRecordedEvent imageRecordedEvent, CancellationToken cancellationToken = default)
+    
+    public async Task<Result<QueueMessage>> PushImageToQueue(ImageRecordedEvent imageRecordedEvent, string queueName, CancellationToken cancellationToken = default)
     {
-        Result<DetectionEvent?> result = new Result<DetectionEvent?>(null);
+        Result<QueueMessage> result = new Result<QueueMessage>(null);
         result
             .AddErrorIf(
-                () => imageRecordedEvent.ImageBytes.Length == 0, 
-                new ArgumentError("ImageBytes cannot be empty"))
-            .AddErrorIf(
                 () => string.IsNullOrWhiteSpace(imageRecordedEvent.ImageName),
-                new ArgumentError("ImageName cannot be empty"))
+                new ArgumentError("ImageName Cannot Be null")
+            )
             .AddErrorIf(
                 () => string.IsNullOrWhiteSpace(imageRecordedEvent.CameraName),
-                new ArgumentError("CameraName cannot be empty"));
-
-        if (result.HasError)
-            return result;
+                new ArgumentError("CameraName Cannot Be null")
+            );
+        QueueMessage queueMessage = new()
+        {
+            Body = imageRecordedEvent.ImageBytes,
+            QueueMessageHeaders = new[]
+            {
+                new QueueMessageHeader("CameraName", imageRecordedEvent.CameraName),
+                new QueueMessageHeader("CreatedUTCDateTime",
+                    imageRecordedEvent.ImageCreatedDateTime.ToString("yyyyMMddHHmmssfff"))
+            },
+            QueueName = queueName,
+        };
+        bool messageSent = await _queuePublisherService.SentMessageToQueue(queueMessage, cancellationToken);
+        result.AddErrorIf(() => !messageSent, new InvalidOperationError("Message not published to queue"));
         
-        DetectionEvent? detectionEvent = await _aIDectectionService.AnalyseImage(imageRecordedEvent, cancellationToken);
-        result.UpdateValueIfNoError(detectionEvent);
-
+        result.UpdateValueIfNoError(queueMessage);
         return result;
     }
 
-    public async Task<Result<ImageDetection>> SaveDetectionToDB(DetectionEvent detectionEvent, CancellationToken cancellationToken = default)
+    // public async Task<Result<DetectionEvent?>> LaunchDetectionAlgorithm(ImageRecordedEvent imageRecordedEvent, CancellationToken cancellationToken = default)
+    // {
+    //     Result<DetectionEvent?> result = new Result<DetectionEvent?>(null);
+    //     result
+    //         .AddErrorIf(
+    //             () => imageRecordedEvent.ImageBytes.Length == 0, 
+    //             new ArgumentError("ImageBytes cannot be empty"))
+    //         .AddErrorIf(
+    //             () => string.IsNullOrWhiteSpace(imageRecordedEvent.ImageName),
+    //             new ArgumentError("ImageName cannot be empty"))
+    //         .AddErrorIf(
+    //             () => string.IsNullOrWhiteSpace(imageRecordedEvent.CameraName),
+    //             new ArgumentError("CameraName cannot be empty"));
+    //
+    //     if (result.HasError)
+    //         return result;
+    //     
+    //     DetectionEvent? detectionEvent = await _aIDectectionService.AnalyseImage(imageRecordedEvent, cancellationToken);
+    //     result.UpdateValueIfNoError(detectionEvent);
+    //
+    //     return result;
+    // }
+
+    public async Task<Result<ImageDetection>> SaveDetectionToDb(DetectionEvent detectionEvent, CancellationToken cancellationToken = default)
     {
         Result<ImageDetection> result = new Result<ImageDetection>(null);
         result

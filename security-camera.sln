@@ -11,7 +11,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecurityCamera.Domain", "Se
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecurityCamera.SharedKernel", "SecurityCamera.SharedKernel\SecurityCamera.SharedKernel.csproj", "{65BF9A45-35E0-43BC-AF88-18D47B384198}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecurityCamera.Infrastructure.RabbitMq", "SecurityCamera.Infrastructure.RabbitMq\SecurityCamera.Infrastructure.RabbitMq.csproj", "{D81D8F68-584C-48B8-8F2A-CEA373EDA119}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecurityCamera.Infrastructure.RabbitMq", "SecurityCamera.Infrastructure.RabbitMq\SecurityCamera.Infrastructure.RabbitMq.csproj", "{12792A33-DB49-4FD8-8CB5-51A901F958E1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecurityCamera.Application", "SecurityCamera.Application\SecurityCamera.Application.csproj", "{49BD4711-C2F7-4F08-B33B-88D6B70996CD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecurityCamera.Console.ImageRecorder", "SecurityCamera.Console.ImageRecorder\SecurityCamera.Console.ImageRecorder.csproj", "{B87FB9DA-1B2D-47AB-9D6E-58EFF3E25CCE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecurityCamera.Infrastructure.Database", "SecurityCamera.Infrastructure.Database\SecurityCamera.Infrastructure.Database.csproj", "{1D8DB45F-79F0-4348-9442-81341B101111}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,10 +41,22 @@ Global
 		{65BF9A45-35E0-43BC-AF88-18D47B384198}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{65BF9A45-35E0-43BC-AF88-18D47B384198}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{65BF9A45-35E0-43BC-AF88-18D47B384198}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D81D8F68-584C-48B8-8F2A-CEA373EDA119}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D81D8F68-584C-48B8-8F2A-CEA373EDA119}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D81D8F68-584C-48B8-8F2A-CEA373EDA119}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D81D8F68-584C-48B8-8F2A-CEA373EDA119}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12792A33-DB49-4FD8-8CB5-51A901F958E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12792A33-DB49-4FD8-8CB5-51A901F958E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12792A33-DB49-4FD8-8CB5-51A901F958E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12792A33-DB49-4FD8-8CB5-51A901F958E1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49BD4711-C2F7-4F08-B33B-88D6B70996CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49BD4711-C2F7-4F08-B33B-88D6B70996CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49BD4711-C2F7-4F08-B33B-88D6B70996CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49BD4711-C2F7-4F08-B33B-88D6B70996CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B87FB9DA-1B2D-47AB-9D6E-58EFF3E25CCE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B87FB9DA-1B2D-47AB-9D6E-58EFF3E25CCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B87FB9DA-1B2D-47AB-9D6E-58EFF3E25CCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B87FB9DA-1B2D-47AB-9D6E-58EFF3E25CCE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D8DB45F-79F0-4348-9442-81341B101111}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D8DB45F-79F0-4348-9442-81341B101111}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D8DB45F-79F0-4348-9442-81341B101111}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D8DB45F-79F0-4348-9442-81341B101111}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
