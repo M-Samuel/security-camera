@@ -18,30 +18,31 @@ public class Worker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        ValidateArgs();
-        EventId eventId = new EventId(0, Guid.NewGuid().ToString());
-
+        EventId eventId = new EventId(new Random().Next(), Guid.NewGuid().ToString());
+        _logger.LogInformation(eventId, "Starting...");
+        
         ImageRecorderCommandData commandData = new()
         {
             CameraName = _configuration[nameof(Args.CameraName)] ?? "",
             ImageDirectory = _configuration[nameof(Args.ImagesDirPath)] ?? "",
             QueueName = _configuration[nameof(Args.QueueName)] ?? ""
         };
-        await _imageRecorderCommand.ProcessCommandAsync(commandData, eventId, stoppingToken);
-        
+
+        while (true)
+        {
+            stoppingToken.ThrowIfCancellationRequested();
+            try
+            {
+                await _imageRecorderCommand.ProcessCommandAsync(commandData, eventId, stoppingToken);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(eventId, e, "Fatal error...");
+                throw;
+            }
+
+            await Task.Delay(3000, stoppingToken);
+        }
     }
 
-    private void ValidateArgs()
-    {
-        if(string.IsNullOrWhiteSpace(nameof(Args.CameraName)))
-            throw new ArgumentNullException(nameof(Args.CameraName));
-        if(string.IsNullOrWhiteSpace(nameof(Args.QueueName)))
-            throw new ArgumentNullException(nameof(Args.QueueName));
-        if(string.IsNullOrWhiteSpace(nameof(Args.RoutingKey)))
-            throw new ArgumentNullException(nameof(Args.RoutingKey));
-        if(string.IsNullOrWhiteSpace(nameof(Args.ImagesDirPath)))
-            throw new ArgumentNullException(nameof(Args.ImagesDirPath));
-        if(string.IsNullOrWhiteSpace(nameof(Args.RabbitMqHostName)))
-            throw new ArgumentNullException(nameof(Args.RabbitMqHostName));
-    }
 }

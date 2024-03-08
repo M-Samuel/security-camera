@@ -36,7 +36,11 @@ public class ImageRecorderService : IImageRecorderService
         if (result.HasError)
             return result;
 
-        string[] detectedFiles = Directory.EnumerateFiles(startDirectoryScanEvent.Directory, "*.png").ToArray();
+        string[] detectedFiles = 
+        Directory.EnumerateFiles(startDirectoryScanEvent.Directory, "*.png")
+        .Concat(
+            Directory.EnumerateFiles(startDirectoryScanEvent.Directory, "*.jpg")
+        ).ToArray();
         ImageRecordedEvent[] imageDetectedEvents  = await ConvertToImageDetectionEvent(detectedFiles, cameraName, cancellationToken).ToArrayAsync(cancellationToken);
         
         result.UpdateValueIfNoError(imageDetectedEvents);

@@ -13,6 +13,7 @@ RegisterApplication(builder);
 RegisterInfrastructure(builder);
 RegisterCrossCuttingConcerns(builder);
 
+ValidateArgs(builder.Configuration);
 var host = builder.Build();
 host.Run();
 
@@ -38,4 +39,20 @@ static void RegisterCrossCuttingConcerns(HostApplicationBuilder hostApplicationB
     hostApplicationBuilder.Logging.ClearProviders();
     hostApplicationBuilder.Logging.AddConsole();
     hostApplicationBuilder.Logging.AddDebug();
+}
+
+
+
+static void ValidateArgs(IConfiguration configuration)
+{
+    if(string.IsNullOrWhiteSpace(configuration[nameof(Args.CameraName)]))
+        throw new ArgumentNullException(nameof(Args.CameraName));
+    if(string.IsNullOrWhiteSpace(configuration[nameof(Args.QueueName)]))
+        throw new ArgumentNullException(nameof(Args.QueueName));
+    if(string.IsNullOrWhiteSpace(configuration[nameof(Args.RoutingKey)]))
+        throw new ArgumentNullException(nameof(Args.RoutingKey));
+    if(string.IsNullOrWhiteSpace(configuration[nameof(Args.ImagesDirPath)]))
+        throw new ArgumentNullException(nameof(Args.ImagesDirPath));
+    if(string.IsNullOrWhiteSpace(configuration[nameof(Args.RabbitMqHostName)]))
+        throw new ArgumentNullException(nameof(Args.RabbitMqHostName));
 }
