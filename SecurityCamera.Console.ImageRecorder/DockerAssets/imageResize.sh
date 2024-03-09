@@ -3,6 +3,9 @@
 original_dir="/images/original"
 resized_dir="/images/resized"
 
+mkdir $original_dir
+mkdir $resized_dir
+
 while true
 do
 
