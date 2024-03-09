@@ -1,12 +1,5 @@
 # Use the official image as a parent image.
-ARG SDKARCH=amd64
-FROM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim-$SDKARCH AS build-env
-
-
-ARG TARGETARCH
-RUN arch=$TARGETARCH \
-    && if [ "$TARGETARCH" = "amd64" ]; then arch="x64"; fi \
-    && echo $arch > /tmp/arch
+FROM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim AS build-env
 
 # Set the working directory.
 WORKDIR /src
@@ -16,7 +9,7 @@ COPY ../ ./
 
 # Build the app.
 WORKDIR /src/SecurityCamera.Console.ImageRecorder
-RUN dotnet publish -c Release -r linux-$(cat /tmp/arch) --self-contained false -o /build
+RUN dotnet publish -c Release --self-contained false -o /build
 
 # Build runtime image.
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim as runtime
