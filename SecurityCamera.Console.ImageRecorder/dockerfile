@@ -13,10 +13,7 @@ WORKDIR /src/SecurityCamera.Console.ImageRecorder
 RUN dotnet publish -a $TARGETARCH -c Release --self-contained false -o /build
 
 # Build runtime image.
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim as runtime
-
-RUN apt update 
-RUN apt install ffmpeg nano htop imagemagick -y
+FROM smb5d/security-camera-image-recorder-prebuild:latest
 
 WORKDIR /app
 COPY --from=build-env /build .
