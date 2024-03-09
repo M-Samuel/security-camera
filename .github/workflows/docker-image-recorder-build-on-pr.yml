@@ -34,6 +34,7 @@ jobs:
         cache-to: type=gha,mode=max
         push: false
         tags: ${{ secrets.DOCKER_USERNAME }}/security-camera-image-recorder:latest
+        build-args: SDKARCH=arm64v8
           
     
           
