@@ -1,5 +1,5 @@
 # Use the official image as a parent image.
-FROM mcr.microsoft.com/dotnet/sdk:7.0-bookworm-slim AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim AS build-env
 
 # Set the working directory.
 WORKDIR /src
@@ -12,7 +12,10 @@ WORKDIR /src/SecurityCamera.Console.ImageRecorder
 RUN dotnet publish -c Release -o /build
 
 # Build runtime image.
-FROM smb5d/security-camera-image-recorder-prebuild:latest
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim
+
+RUN apt update 
+RUN apt install ffmpeg nano htop imagemagick -y
 
 WORKDIR /app
 COPY --from=build-env /build .
