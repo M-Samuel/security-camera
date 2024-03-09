@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
-using SecurityCamera.Domain.ImageRecorderDomain.ImageRecorderDomainErrors;
-using SecurityCamera.Domain.ImageRecorderDomain.ImageRecorderDomainEvents;
-using SecurityCamera.Domain.ImageRecorderDomain.Repository;
+using SecurityCamera.Domain.ImageRecorderDomain.Errors;
+using SecurityCamera.Domain.ImageRecorderDomain.Events;
 using SecurityCamera.Domain.InfrastructureServices;
 using SecurityCamera.SharedKernel;
 
@@ -10,17 +9,11 @@ namespace SecurityCamera.Domain.ImageRecorderDomain;
 public class ImageRecorderService : IImageRecorderService
 {
     private readonly IQueuePublisherService _queuePublisherService;
-    // private readonly IAIDectectionService _aIDectectionService;
-    private readonly IImageRecorderWriteRepository _imageRecorderWriteRepository;
 
     public ImageRecorderService(
-        IQueuePublisherService queuePublisherService,
-        // IAIDectectionService aIDectectionService,
-        IImageRecorderWriteRepository imageRecorderWriteRepository)
+        IQueuePublisherService queuePublisherService)
     {
         _queuePublisherService = queuePublisherService;
-        // _aIDectectionService = aIDectectionService;
-        _imageRecorderWriteRepository = imageRecorderWriteRepository;
     }
     public async Task<Result<ImageRecordedEvent[]>> ScanDirectory(StartDirectoryScanEvent startDirectoryScanEvent, string cameraName, CancellationToken cancellationToken = default)
     {
@@ -69,37 +62,6 @@ public class ImageRecorderService : IImageRecorderService
             yield return imageDetectedEvent;
         }
     }
-
-    public async Task<Result<QueueMessage>> PushImageToQueue(DetectionEvent imageDetectedEvent, CancellationToken cancellationToken = default)
-    {
-        Result<QueueMessage> result = new Result<QueueMessage>(null);
-        result
-            .AddErrorIf(
-                () => string.IsNullOrWhiteSpace(imageDetectedEvent.ImageName),
-                new ArgumentError("ImageName Cannot Be null")
-            )
-            .AddErrorIf(
-                () => string.IsNullOrWhiteSpace(imageDetectedEvent.CameraName),
-                new ArgumentError("CameraName Cannot Be null")
-            );
-        QueueMessage queueMessage = new()
-        {
-            Body = imageDetectedEvent.ImageBytes,
-            QueueMessageHeaders = new[]
-            {
-                new QueueMessageHeader("CameraName", imageDetectedEvent.CameraName),
-                new QueueMessageHeader("CreatedUTCDateTime",
-                    imageDetectedEvent.ImageCreatedDateTime.ToString("yyyyMMddHHmmssfff")),
-                new QueueMessageHeader("DetectionType", imageDetectedEvent.DetectionType.ToString())
-            },
-            QueueName = imageDetectedEvent.CameraName,
-        };
-        bool messageSent = await _queuePublisherService.SentMessageToQueue(queueMessage, cancellationToken);
-        result.AddErrorIf(() => !messageSent, new InvalidOperationError("Message not published to queue"));
-        
-        result.UpdateValueIfNoError(queueMessage);
-        return result;
-    }
     
     public async Task<Result<QueueMessage>> PushImageToQueue(ImageRecordedEvent imageRecordedEvent, string queueName, CancellationToken cancellationToken = default)
     {
@@ -130,59 +92,5 @@ public class ImageRecorderService : IImageRecorderService
         result.UpdateValueIfNoError(queueMessage);
         return result;
     }
-
-    // public async Task<Result<DetectionEvent?>> LaunchDetectionAlgorithm(ImageRecordedEvent imageRecordedEvent, CancellationToken cancellationToken = default)
-    // {
-    //     Result<DetectionEvent?> result = new Result<DetectionEvent?>(null);
-    //     result
-    //         .AddErrorIf(
-    //             () => imageRecordedEvent.ImageBytes.Length == 0, 
-    //             new ArgumentError("ImageBytes cannot be empty"))
-    //         .AddErrorIf(
-    //             () => string.IsNullOrWhiteSpace(imageRecordedEvent.ImageName),
-    //             new ArgumentError("ImageName cannot be empty"))
-    //         .AddErrorIf(
-    //             () => string.IsNullOrWhiteSpace(imageRecordedEvent.CameraName),
-    //             new ArgumentError("CameraName cannot be empty"));
-    //
-    //     if (result.HasError)
-    //         return result;
-    //     
-    //     DetectionEvent? detectionEvent = await _aIDectectionService.AnalyseImage(imageRecordedEvent, cancellationToken);
-    //     result.UpdateValueIfNoError(detectionEvent);
-    //
-    //     return result;
-    // }
-
-    public async Task<Result<ImageDetection>> SaveDetectionToDb(DetectionEvent detectionEvent, CancellationToken cancellationToken = default)
-    {
-        Result<ImageDetection> result = new Result<ImageDetection>(null);
-        result
-            .AddErrorIf(
-                () => detectionEvent.ImageBytes.Length == 0, 
-                new ArgumentError("ImageBytes cannot be empty"))
-            .AddErrorIf(
-                () => string.IsNullOrWhiteSpace(detectionEvent.ImageName),
-                new ArgumentError("ImageName cannot be empty"))
-            .AddErrorIf(
-                () => string.IsNullOrWhiteSpace(detectionEvent.CameraName),
-                new ArgumentError("CameraName cannot be empty"));
-
-        if (result.HasError)
-            return result;
-
-        ImageDetection imageDetection = new(){
-            CameraName = detectionEvent.CameraName,
-            ImageSize = detectionEvent.ImageBytes.Length,
-            ImageName = detectionEvent.ImageName,
-            DetectionDateTime = detectionEvent.ImageCreatedDateTime,
-            DetectionType = detectionEvent.DetectionType,
-            Id = new Guid()
-        };
-        await _imageRecorderWriteRepository.SaveImageDetection(imageDetection, cancellationToken);
-
-        result.UpdateValueIfNoError(imageDetection);
-
-        return result;
-    }
+    
 }

@@ -7,7 +7,7 @@
       "environmentVariables": {
         "DOTNET_ENVIRONMENT": "Development"
       },
-      "commandLineArgs": "--RabbitMqHostName=localhost --QueueName=CameraImages --ImagesDirPath=SampleImages --CameraName=FrontDoor --RoutingKey=CameraImages"
+      "commandLineArgs": "--RabbitMqHostName=localhost --QueueName=CameraImages --ImagesDirPath=bin/Debug/net8.0/SampleImages --CameraName=FrontDoor --RoutingKey=CameraImages"
     }
   }
 }

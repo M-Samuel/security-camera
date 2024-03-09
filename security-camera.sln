@@ -15,6 +15,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecurityCamera.Console.Imag
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecurityCamera.Infrastructure.Database", "SecurityCamera.Infrastructure.Database\SecurityCamera.Infrastructure.Database.csproj", "{1D8DB45F-79F0-4348-9442-81341B101111}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecurityCamera.Console.ImageObjectDetection", "SecurityCamera.Console.ImageObjectDetection\SecurityCamera.Console.ImageObjectDetection.csproj", "{2ABFFEE0-9DFF-453F-B7EC-48A5D0BAED2D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecurityCamera.Infrastructure.OnnxAi", "SecurityCamera.Infrastructure.OnnxAi\SecurityCamera.Infrastructure.OnnxAi.csproj", "{95D58EA4-C59C-4469-BEFA-277E860E95D8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectDetector", "ObjectDetector\ObjectDetector.csproj", "{F15BB082-F7F6-48B1-A73A-7B627B516A29}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +51,18 @@ Global
 		{1D8DB45F-79F0-4348-9442-81341B101111}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1D8DB45F-79F0-4348-9442-81341B101111}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1D8DB45F-79F0-4348-9442-81341B101111}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2ABFFEE0-9DFF-453F-B7EC-48A5D0BAED2D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2ABFFEE0-9DFF-453F-B7EC-48A5D0BAED2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2ABFFEE0-9DFF-453F-B7EC-48A5D0BAED2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2ABFFEE0-9DFF-453F-B7EC-48A5D0BAED2D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{95D58EA4-C59C-4469-BEFA-277E860E95D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95D58EA4-C59C-4469-BEFA-277E860E95D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{95D58EA4-C59C-4469-BEFA-277E860E95D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95D58EA4-C59C-4469-BEFA-277E860E95D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F15BB082-F7F6-48B1-A73A-7B627B516A29}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F15BB082-F7F6-48B1-A73A-7B627B516A29}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F15BB082-F7F6-48B1-A73A-7B627B516A29}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F15BB082-F7F6-48B1-A73A-7B627B516A29}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

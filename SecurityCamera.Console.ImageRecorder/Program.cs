@@ -1,9 +1,7 @@
 using SecurityCamera.Application.Command.ImageRecorder;
 using SecurityCamera.Console.ImageRecorder;
 using SecurityCamera.Domain.ImageRecorderDomain;
-using SecurityCamera.Domain.ImageRecorderDomain.Repository;
 using SecurityCamera.Domain.InfrastructureServices;
-using SecurityCamera.Infrastructure.Database;
 using SecurityCamera.Infrastructure.RabbitMq;
 
 var builder = Host.CreateApplicationBuilder(args);
@@ -31,7 +29,6 @@ static void RegisterApplication(HostApplicationBuilder hostApplicationBuilder)
 static void RegisterInfrastructure(HostApplicationBuilder hostApplicationBuilder)
 {
     hostApplicationBuilder.Services.AddSingleton<IQueuePublisherService, RabbitMqService>();
-    hostApplicationBuilder.Services.AddSingleton<IImageRecorderWriteRepository, FakeRepository>();
 }
 
 static void RegisterCrossCuttingConcerns(HostApplicationBuilder hostApplicationBuilder)
