@@ -36,21 +36,27 @@ public class ImageRecorderService : IImageRecorderService
         if (result.HasError)
             return result;
 
-        string[] detectedFiles = 
+        string[] recordedFiles = 
         Directory.EnumerateFiles(startDirectoryScanEvent.Directory, "*.png")
         .Concat(
             Directory.EnumerateFiles(startDirectoryScanEvent.Directory, "*.jpg")
         ).ToArray();
-        ImageRecordedEvent[] imageDetectedEvents  = await ConvertToImageDetectionEvent(detectedFiles, cameraName, cancellationToken).ToArrayAsync(cancellationToken);
-        
-        result.UpdateValueIfNoError(imageDetectedEvents);
+        ImageRecordedEvent[] imageRecordedEvents  = await ConvertToImageDetectionEvent(recordedFiles, cameraName, cancellationToken).ToArrayAsync(cancellationToken);
+        DeleteImages(recordedFiles);
+        result.UpdateValueIfNoError(imageRecordedEvents);
 
         return result;
     }
 
-    private async IAsyncEnumerable<ImageRecordedEvent> ConvertToImageDetectionEvent(string[] detectedFiles, string cameraName, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    private static void DeleteImages(string[] recordedFiles)
     {
-        foreach (string filePath in detectedFiles)
+        foreach (string filePath in recordedFiles)
+            File.Delete(filePath);
+    }
+
+    private async IAsyncEnumerable<ImageRecordedEvent> ConvertToImageDetectionEvent(string[] recordedFiles, string cameraName, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        foreach (string filePath in recordedFiles)
         {
             cancellationToken.ThrowIfCancellationRequested();
             ImageRecordedEvent imageDetectedEvent = new ImageRecordedEvent(
