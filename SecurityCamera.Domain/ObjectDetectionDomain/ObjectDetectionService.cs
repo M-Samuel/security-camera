@@ -7,7 +7,7 @@ using SecurityCamera.SharedKernel;
 
 namespace SecurityCamera.Domain.ObjectDetectionDomain;
 
-public class ObjectDetectionService
+public class ObjectDetectionService : IObjectDetectionService
 {
     private readonly IQueuePublisherService _queuePublisherService;
     private readonly IAiDetectionService _aiDetectionService;
@@ -23,39 +23,7 @@ public class ObjectDetectionService
         _aiDetectionService = aiDetectionService;
         _objectDetectionWriteRepository = objectDetectionWriteRepository;
     }
-    
-    
-    public async Task<Result<QueueMessage>> PushImageToQueue(DetectionEvent imageDetectedEvent, CancellationToken cancellationToken = default)
-    {
-        Result<QueueMessage> result = new Result<QueueMessage>(null);
-        result
-            .AddErrorIf(
-                () => string.IsNullOrWhiteSpace(imageDetectedEvent.ImageName),
-                new ArgumentError("ImageName Cannot Be null")
-            )
-            .AddErrorIf(
-                () => string.IsNullOrWhiteSpace(imageDetectedEvent.CameraName),
-                new ArgumentError("CameraName Cannot Be null")
-            );
-        QueueMessage queueMessage = new()
-        {
-            Body = imageDetectedEvent.ImageBytes,
-            QueueMessageHeaders = new[]
-            {
-                new QueueMessageHeader("CameraName", imageDetectedEvent.CameraName),
-                new QueueMessageHeader("CreatedUTCDateTime",
-                    imageDetectedEvent.ImageCreatedDateTime.ToString("yyyyMMddHHmmssfff")),
-                new QueueMessageHeader("DetectionType", imageDetectedEvent.DetectionType.ToString())
-            },
-            QueueName = imageDetectedEvent.CameraName,
-        };
-        bool messageSent = await _queuePublisherService.SentMessageToQueue(queueMessage, cancellationToken);
-        result.AddErrorIf(() => !messageSent, new InvalidOperationError("Message not published to queue"));
-        
-        result.UpdateValueIfNoError(queueMessage);
-        return result;
-    }
-    
+
     
     public async Task<Result<DetectionEvent?>> LaunchDetectionAlgorithm(ImageRecordedEvent imageRecordedEvent, CancellationToken cancellationToken = default)
     {
@@ -110,6 +78,38 @@ public class ObjectDetectionService
 
         result.UpdateValueIfNoError(imageDetection);
 
+        return result;
+    }
+
+
+    public async Task<Result<QueueMessage>> PushDetectionToQueue(string detectionQueue, DetectionEvent detectionEvent, CancellationToken cancellationToken)
+    {
+        Result<QueueMessage> result = new Result<QueueMessage>(null);
+        result
+            .AddErrorIf(
+                () => string.IsNullOrWhiteSpace(detectionEvent.ImageName),
+                new ArgumentError("ImageName Cannot Be null")
+            )
+            .AddErrorIf(
+                () => string.IsNullOrWhiteSpace(detectionEvent.CameraName),
+                new ArgumentError("CameraName Cannot Be null")
+            );
+        QueueMessage queueMessage = new()
+        {
+            Body = detectionEvent.ImageBytes,
+            QueueMessageHeaders = new[]
+            {
+                new QueueMessageHeader(nameof(DetectionEvent.CameraName), detectionEvent.CameraName),
+                new QueueMessageHeader("CreatedUTCDateTime",
+                    detectionEvent.ImageCreatedDateTime.ToString("yyyyMMddHHmmssfff")),
+                new QueueMessageHeader(nameof(DetectionEvent.DetectionType), detectionEvent.DetectionType.ToString())
+            },
+            QueueName = detectionQueue,
+        };
+        bool messageSent = await _queuePublisherService.SentMessageToQueue(queueMessage, cancellationToken);
+        result.AddErrorIf(() => !messageSent, new InvalidOperationError("Message not published to queue"));
+        
+        result.UpdateValueIfNoError(queueMessage);
         return result;
     }
 }

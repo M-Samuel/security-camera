@@ -9,5 +9,5 @@ public interface IObjectDetectionService
 {
     Task<Result<DetectionEvent?>> LaunchDetectionAlgorithm(ImageRecordedEvent imageRecordedEvent, CancellationToken cancellationToken);
     Task<Result<ImageDetection>> SaveDetectionToDb(DetectionEvent detectionEvent, CancellationToken cancellationToken);
-    Task<Result<QueueMessage>> PushImageToQueue(DetectionEvent detectionEvent, CancellationToken cancellationToken);
+    Task<Result<QueueMessage>> PushDetectionToQueue(string detectionQueue, DetectionEvent detectionEvent, CancellationToken cancellationToken);
 }

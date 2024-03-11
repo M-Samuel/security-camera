@@ -80,8 +80,9 @@ public class ImageRecorderService : IImageRecorderService
             Body = imageRecordedEvent.ImageBytes,
             QueueMessageHeaders = new[]
             {
-                new QueueMessageHeader("CameraName", imageRecordedEvent.CameraName),
-                new QueueMessageHeader("CreatedUTCDateTime",
+                new QueueMessageHeader(nameof(imageRecordedEvent.ImageName), imageRecordedEvent.ImageName),
+                new QueueMessageHeader(nameof(imageRecordedEvent.CameraName), imageRecordedEvent.CameraName),
+                new QueueMessageHeader(nameof(imageRecordedEvent.ImageCreatedDateTime),
                     imageRecordedEvent.ImageCreatedDateTime.ToString("yyyyMMddHHmmssfff"))
             },
             QueueName = queueName,

@@ -13,15 +13,12 @@ public class ImageRecorderCommand : ICommand<ImageRecorderCommandData, ImageReco
 {
     private readonly ILogger<ImageRecorderCommand> _logger;
     private readonly IImageRecorderService _imageRecorderService;
-    private readonly IAiDetectionService _detectionService;
 
     public ImageRecorderCommand(
         ILogger<ImageRecorderCommand> logger,
-        IImageRecorderService imageRecorderService,
-        IAiDetectionService detectionService)
+        IImageRecorderService imageRecorderService)
     {
         _logger = logger;
-        _detectionService = detectionService;
         _imageRecorderService = imageRecorderService;
     }
 
@@ -43,7 +40,6 @@ public class ImageRecorderCommand : ICommand<ImageRecorderCommandData, ImageReco
         
         foreach (ImageRecordedEvent imageRecordedEvent in imageRecordEvents)
         {
-            var dtec = await _detectionService.AnalyseImage(imageRecordedEvent, cancellationToken).FirstOrDefaultAsync(cancellationToken);
             var pushResult = await _imageRecorderService.PushImageToQueue(imageRecordedEvent, commandData.QueueName, cancellationToken);
             if(pushResult.HasError)
                 _logger.ProcessApplicationErrors(pushResult.DomainErrors, eventId);
