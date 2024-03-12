@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecurityCamera.Infrastructu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecurityCamera.Infrastructure.AzureBlobStorage", "SecurityCamera.Infrastructure.AzureBlobStorage\SecurityCamera.Infrastructure.AzureBlobStorage.csproj", "{B8C4DB0D-8E46-4310-BC40-19E23199BA2B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecurityCamera.Console.VideoRecorder", "SecurityCamera.Console.VideoRecorder\SecurityCamera.Console.VideoRecorder.csproj", "{9AF9A520-D5C9-4884-A5D3-32DCD6A14468}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +65,10 @@ Global
 		{B8C4DB0D-8E46-4310-BC40-19E23199BA2B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B8C4DB0D-8E46-4310-BC40-19E23199BA2B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B8C4DB0D-8E46-4310-BC40-19E23199BA2B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9AF9A520-D5C9-4884-A5D3-32DCD6A14468}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9AF9A520-D5C9-4884-A5D3-32DCD6A14468}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9AF9A520-D5C9-4884-A5D3-32DCD6A14468}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9AF9A520-D5C9-4884-A5D3-32DCD6A14468}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
