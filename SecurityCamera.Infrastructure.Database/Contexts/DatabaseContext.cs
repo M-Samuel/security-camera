@@ -39,6 +39,12 @@ public class DatabaseContext : DbContext, IObjectDetectionEntity, IUnitOfWork
             .IsRequired();
         builder.Property(x => x.DetectionDateTime)
             .IsRequired();
+        builder.Property(x => x.RemoteStorageContainer)
+            .HasMaxLength(200)
+            .IsRequired();
+        builder.Property(x => x.RemoteStorageFilePath)
+            .HasMaxLength(2000)
+            .IsRequired();
     }
 
     public async Task<int> SaveAsync(CancellationToken cancellationToken)
