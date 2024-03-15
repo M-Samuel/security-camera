@@ -67,7 +67,7 @@ IQueuePublisherService<DetectionMessage>
         using ServiceBusMessageBatch messageBatch = await sender.CreateMessageBatchAsync(cancellationToken);
         try
         {
-            string messageBody = queueMessage.ToJson();
+            string messageBody = ImageRecorderOnImagePushMessage.ToJson(queueMessage);
             ServiceBusMessage serviceBusMessage = new ServiceBusMessage(messageBody);
             bool canAddToBatch = messageBatch.TryAddMessage(serviceBusMessage);
             if(!canAddToBatch)
@@ -113,7 +113,7 @@ IQueuePublisherService<DetectionMessage>
         using ServiceBusMessageBatch messageBatch = await sender.CreateMessageBatchAsync(cancellationToken);
         try
         {
-            string messageBody = queueMessage.ToJson();
+            string messageBody = DetectionMessage.ToJson(queueMessage);
             ServiceBusMessage serviceBusMessage = new ServiceBusMessage(messageBody);
             bool canAddToBatch = messageBatch.TryAddMessage(serviceBusMessage);
             if(!canAddToBatch)

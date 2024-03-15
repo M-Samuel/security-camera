@@ -5,6 +5,8 @@ using SecurityCamera.Domain.InfrastructureServices;
 using SecurityCamera.Infrastructure.AzureBlobStorage;
 using SecurityCamera.Infrastructure.AzureServiceBus;
 using SecurityCamera.Infrastructure.RabbitMq;
+using BlobEnvVars = SecurityCamera.Infrastructure.AzureBlobStorage.EnvVars;
+using BusEnvVars = SecurityCamera.Infrastructure.AzureServiceBus.EnvVars;
 
 var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddHostedService<Worker>();
@@ -60,4 +62,8 @@ static void ValidateArgs(IConfiguration configuration)
         throw new ArgumentNullException(nameof(Args.RemoteStorageContainer));
     if(string.IsNullOrWhiteSpace(configuration[nameof(Args.RemoteStorageFileDirectory)]))
         throw new ArgumentNullException(nameof(Args.RemoteStorageFileDirectory));
+    if(string.IsNullOrWhiteSpace(configuration[nameof(BlobEnvVars.AzureStorageConnectionString)]))
+        throw new ArgumentNullException(nameof(BlobEnvVars.AzureStorageConnectionString));
+    if(string.IsNullOrWhiteSpace(configuration[nameof(BusEnvVars.AzureServiceBusConnectionString)]))
+        throw new ArgumentNullException(nameof(BusEnvVars.AzureServiceBusConnectionString));
 }

@@ -8,9 +8,9 @@ public class QueueMessage
 {
     public required string QueueName { get; set; }
 
-    public string ToJson()
+    public static string ToJson<T>(T obj)
     {
-        return JsonSerializer.Serialize(this);
+        return JsonSerializer.Serialize(obj);
     }
     public byte[] ToByteArray()
     {

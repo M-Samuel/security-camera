@@ -37,6 +37,13 @@ public class AzureBlobStorageService : IRemoteStorageService
         }
         catch (RequestFailedException rfe)
         {
+            if(rfe.ErrorCode == "ContainerAlreadyExists")
+            {
+                return new RemoteStorageContainer()
+                {
+                    ContainerName = containerName
+                };
+            }
             _logger.LogError($"HTTP error code {rfe.Status}: {rfe.ErrorCode}");
             throw;
         }
