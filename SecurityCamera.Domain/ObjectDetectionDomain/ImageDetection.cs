@@ -10,4 +10,6 @@ public class ImageDetection : IEntity
     public required int ImageSize { get; set; }
     public required DetectionType DetectionType { get; set; }
     public required DateTime DetectionDateTime { get; set; }
+    public required string RemoteStorageContainer { get; set; }
+    public required string RemoteStorageFilePath { get; set; }
 }

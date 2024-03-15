@@ -8,12 +8,15 @@ namespace SecurityCamera.Domain.ImageRecorderDomain;
 
 public class ImageRecorderService : IImageRecorderService
 {
-    private readonly IQueuePublisherService _queuePublisherService;
+    private readonly IQueuePublisherService<ImageRecorderOnImagePushMessage> _queuePublisherService;
+    private readonly IRemoteStorageService _remoteStorageService;
 
     public ImageRecorderService(
-        IQueuePublisherService queuePublisherService)
+        IQueuePublisherService<ImageRecorderOnImagePushMessage> queuePublisherService,
+        IRemoteStorageService remoteStorageService)
     {
         _queuePublisherService = queuePublisherService;
+        _remoteStorageService = remoteStorageService;
     }
     public async Task<Result<ImageRecordedEvent[]>> ScanDirectory(StartDirectoryScanEvent startDirectoryScanEvent, string cameraName, CancellationToken cancellationToken = default)
     {
@@ -63,29 +66,17 @@ public class ImageRecorderService : IImageRecorderService
         }
     }
     
-    public async Task<Result<QueueMessage>> PushImageToQueue(ImageRecordedEvent imageRecordedEvent, string queueName, CancellationToken cancellationToken = default)
+    public async Task<Result<QueueMessage>> PushImagePathToQueue(ImageRecordedEvent imageRecordedEvent, string queueName, string remoteStorageContainer, string remoteStorageFilePath, CancellationToken cancellationToken = default)
     {
         Result<QueueMessage> result = new Result<QueueMessage>(null);
-        result
-            .AddErrorIf(
-                () => string.IsNullOrWhiteSpace(imageRecordedEvent.ImageName),
-                new ArgumentError("ImageName Cannot Be null")
-            )
-            .AddErrorIf(
-                () => string.IsNullOrWhiteSpace(imageRecordedEvent.CameraName),
-                new ArgumentError("CameraName Cannot Be null")
-            );
-        QueueMessage queueMessage = new()
+        ImageRecorderOnImagePushMessage queueMessage = new()
         {
-            Body = imageRecordedEvent.ImageBytes,
-            QueueMessageHeaders = new[]
-            {
-                new QueueMessageHeader(nameof(imageRecordedEvent.ImageName), imageRecordedEvent.ImageName),
-                new QueueMessageHeader(nameof(imageRecordedEvent.CameraName), imageRecordedEvent.CameraName),
-                new QueueMessageHeader(nameof(imageRecordedEvent.ImageCreatedDateTime),
-                    imageRecordedEvent.ImageCreatedDateTime.ToString("yyyyMMddHHmmssfff"))
-            },
             QueueName = queueName,
+            ImageCreatedDateTime = imageRecordedEvent.ImageCreatedDateTime,
+            ImageName = imageRecordedEvent.ImageName,
+            CameraName = imageRecordedEvent.CameraName,
+            RemoteStorageContainer = remoteStorageContainer,
+            RemoteStorageFilePath = remoteStorageFilePath
         };
         bool messageSent = await _queuePublisherService.SentMessageToQueue(queueMessage, cancellationToken);
         result.AddErrorIf(() => !messageSent, new InvalidOperationError("Message not published to queue"));
@@ -93,5 +84,30 @@ public class ImageRecorderService : IImageRecorderService
         result.UpdateValueIfNoError(queueMessage);
         return result;
     }
-    
+
+    public async Task<Result<ImageRecordedEvent>> SaveImageToRemoteStorage(ImageRecordedEvent imageRecordedEvent, string remoteStorageContainer, string remoteStorageFilePath, CancellationToken cancellationToken)
+    {
+        Result<ImageRecordedEvent> result = new Result<ImageRecordedEvent>(imageRecordedEvent);
+        result
+            .AddErrorIf(
+                () => string.IsNullOrWhiteSpace(remoteStorageContainer), 
+                new ArgumentError("RemoteStorageContainer cannot be null/empty"))
+            .AddErrorIf(
+                () => string.IsNullOrWhiteSpace(remoteStorageFilePath),
+                new ArgumentError("remoteStorageFilePath cannot be null/empty"))
+            .AddErrorIf(
+                () => string.IsNullOrWhiteSpace(imageRecordedEvent.ImageName),
+                new ArgumentError("ImageName cannot be null/empty"))
+            .AddErrorIf(
+                () => imageRecordedEvent.ImageBytes == null || imageRecordedEvent.ImageBytes.Length == 0,
+                new ArgumentError("ImageBytes does not contain data"));
+        
+        if(result.HasError)
+            return result;
+
+        await _remoteStorageService.CreateRemoteStorageContainer(remoteStorageContainer, cancellationToken);
+        await _remoteStorageService.UploadRemoteStorageFile(remoteStorageContainer, remoteStorageFilePath, imageRecordedEvent.ImageBytes, cancellationToken);
+
+        return result;
+    }
 }

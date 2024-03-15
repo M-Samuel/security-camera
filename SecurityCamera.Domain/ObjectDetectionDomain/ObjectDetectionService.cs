@@ -9,19 +9,22 @@ namespace SecurityCamera.Domain.ObjectDetectionDomain;
 
 public class ObjectDetectionService : IObjectDetectionService
 {
-    private readonly IQueuePublisherService _queuePublisherService;
+    private readonly IQueuePublisherService<DetectionMessage> _queuePublisherService;
     private readonly IAiDetectionService _aiDetectionService;
     private readonly IObjectDetectionWriteRepository _objectDetectionWriteRepository;
+    private readonly IRemoteStorageService _remoteStorageService;
 
     public ObjectDetectionService(
-        IQueuePublisherService queuePublisherService,
+        IQueuePublisherService<DetectionMessage> queuePublisherService,
         IAiDetectionService aiDetectionService,
-        IObjectDetectionWriteRepository objectDetectionWriteRepository
+        IObjectDetectionWriteRepository objectDetectionWriteRepository,
+        IRemoteStorageService remoteStorageService
         )
     {
         _queuePublisherService = queuePublisherService;
         _aiDetectionService = aiDetectionService;
         _objectDetectionWriteRepository = objectDetectionWriteRepository;
+        _remoteStorageService = remoteStorageService;
     }
 
     
@@ -49,7 +52,7 @@ public class ObjectDetectionService : IObjectDetectionService
     }
     
     
-    public async Task<Result<ImageDetection>> SaveDetectionToDb(DetectionEvent detectionEvent, CancellationToken cancellationToken = default)
+    public async Task<Result<ImageDetection>> SaveDetectionToDb(DetectionEvent detectionEvent, string remoteStorageContainer, string remoteStorageFilePath, CancellationToken cancellationToken = default)
     {
         Result<ImageDetection> result = new Result<ImageDetection>(null);
         result
@@ -72,6 +75,8 @@ public class ObjectDetectionService : IObjectDetectionService
             ImageName = detectionEvent.ImageName,
             DetectionDateTime = detectionEvent.ImageCreatedDateTime,
             DetectionType = detectionEvent.DetectionType,
+            RemoteStorageContainer = remoteStorageContainer,
+            RemoteStorageFilePath = remoteStorageFilePath,
             Id = new Guid()
         };
         await _objectDetectionWriteRepository.SaveImageDetection(imageDetection, cancellationToken);
@@ -82,9 +87,9 @@ public class ObjectDetectionService : IObjectDetectionService
     }
 
 
-    public async Task<Result<QueueMessage>> PushDetectionToQueue(string detectionQueue, DetectionEvent detectionEvent, CancellationToken cancellationToken)
+    public async Task<Result<DetectionMessage>> PushDetectionToQueue(string detectionQueue, DetectionEvent detectionEvent, string remoteStorageContainer, string remoteStorageFilePath, CancellationToken cancellationToken)
     {
-        Result<QueueMessage> result = new Result<QueueMessage>(null);
+        Result<DetectionMessage> result = new Result<DetectionMessage>(null);
         result
             .AddErrorIf(
                 () => string.IsNullOrWhiteSpace(detectionEvent.ImageName),
@@ -94,19 +99,18 @@ public class ObjectDetectionService : IObjectDetectionService
                 () => string.IsNullOrWhiteSpace(detectionEvent.CameraName),
                 new ArgumentError("CameraName Cannot Be null")
             );
-        QueueMessage queueMessage = new()
+        DetectionMessage queueMessage = new()
         {
-            Body = detectionEvent.ImageBytes,
-            QueueMessageHeaders = new[]
-            {
-                new QueueMessageHeader(nameof(DetectionEvent.CameraName), detectionEvent.CameraName),
-                new QueueMessageHeader("CreatedUTCDateTime",
-                    detectionEvent.ImageCreatedDateTime.ToString("yyyyMMddHHmmssfff")),
-                new QueueMessageHeader(nameof(DetectionEvent.DetectionType), detectionEvent.DetectionType.ToString())
-            },
             QueueName = detectionQueue,
+            DetectionType = detectionEvent.DetectionType,
+            CameraName = detectionEvent.CameraName,
+            ImageCreatedDateTime = detectionEvent.ImageCreatedDateTime,
+            ImageName = detectionEvent.ImageName,
+            RemoteStorageContainer = remoteStorageContainer,
+            RemoteStorageFilePath = remoteStorageFilePath
         };
         bool messageSent = await _queuePublisherService.SentMessageToQueue(queueMessage, cancellationToken);
+        await _remoteStorageService.UploadRemoteStorageFile(remoteStorageContainer, remoteStorageFilePath, detectionEvent.ImageBytes, cancellationToken);
         result.AddErrorIf(() => !messageSent, new InvalidOperationError("Message not published to queue"));
         
         result.UpdateValueIfNoError(queueMessage);

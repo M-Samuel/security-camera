@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using SecurityCamera.Domain.ImageRecorderDomain;
 using SecurityCamera.Domain.ImageRecorderDomain.Events;
 using SecurityCamera.Domain.InfrastructureServices;
 using SecurityCamera.Domain.ObjectDetectionDomain;
@@ -10,17 +11,20 @@ public class ObjectDetectionCommand : ICommand<ObjectDetectionCommandData, Objec
 {
     private readonly ILogger<ObjectDetectionCommand> _logger;
     private readonly IObjectDetectionService _objectDetectionService;
-    private readonly IQueueConsumerService _queueConsumerService;
+    private readonly IQueueConsumerService<ImageRecorderOnImagePushMessage> _queueConsumerService;
+    private readonly IRemoteStorageService _remoteStorageService;
 
     public ObjectDetectionCommand(
         ILogger<ObjectDetectionCommand> logger,
         IObjectDetectionService objectDetectionService,
-        IQueueConsumerService queueConsumerService
+        IQueueConsumerService<ImageRecorderOnImagePushMessage> queueConsumerService,
+        IRemoteStorageService remoteStorageService
     )
     {
         _logger = logger;
         _objectDetectionService = objectDetectionService;
         _queueConsumerService = queueConsumerService;
+        _remoteStorageService = remoteStorageService;
     }
 
     public async Task<ObjectDetectionCommandResult> ProcessCommandAsync(ObjectDetectionCommandData commandData, EventId eventId, CancellationToken cancellationToken)
@@ -28,13 +32,23 @@ public class ObjectDetectionCommand : ICommand<ObjectDetectionCommandData, Objec
         await _queueConsumerService.GetMessageFromQueue(
             commandData.ImageQueue,
             async (queueMessage) => {
+                string remoteStorageFilePath = $"{commandData.RemoteStorageFileDirectory}/{queueMessage.ImageName}";
+
+                RemoteStorageFile remoteStorageFile = await _remoteStorageService.DownloadRemoteStorageFile(commandData.RemoteStorageContainer, remoteStorageFilePath, cancellationToken);
+                if(remoteStorageFile.FileContent == null || remoteStorageFile.FileContent.Length == 0)
+                {
+                    _logger.LogError(eventId, $"No image content at location:{commandData.RemoteStorageContainer} {commandData.RemoteStorageFileDirectory}");
+                    return;
+                }
+
                 ImageRecordedEvent imageRecordedEvent = new(
                     OccurrenceDateTime: DateTime.Now,
-                    CameraName: queueMessage.QueueMessageHeaders?.FirstOrDefault(x => x.Key == nameof(ImageRecordedEvent.CameraName))?.Value ?? "" ,
-                    ImageBytes: queueMessage.Body,
-                    ImageCreatedDateTime: DateTime.Parse(queueMessage.QueueMessageHeaders?.FirstOrDefault(x => x.Key == nameof(ImageRecordedEvent.ImageCreatedDateTime))?.Value ?? ""),
-                    ImageName: queueMessage.QueueMessageHeaders?.FirstOrDefault(x => x.Key == nameof(ImageRecordedEvent.ImageName))?.Value ?? ""
+                    CameraName: queueMessage.CameraName ?? "",
+                    ImageBytes: remoteStorageFile.FileContent,
+                    ImageCreatedDateTime: queueMessage.ImageCreatedDateTime,
+                    ImageName: queueMessage.ImageName  ?? ""
                 );
+
                 var detectionResult = await _objectDetectionService.LaunchDetectionAlgorithm(imageRecordedEvent, cancellationToken);
                 if(detectionResult.HasError)
                 {
@@ -47,12 +61,12 @@ public class ObjectDetectionCommand : ICommand<ObjectDetectionCommandData, Objec
                     return;
                 }
 
-                var saveResult = await _objectDetectionService.SaveDetectionToDb(detectionResult.Value, cancellationToken);
+                var saveResult = await _objectDetectionService.SaveDetectionToDb(detectionResult.Value, commandData.RemoteStorageContainer, remoteStorageFilePath, cancellationToken);
                 if(saveResult.HasError)
                     _logger.ProcessApplicationErrors(saveResult.DomainErrors, eventId);
                 else
                 {
-                    var pushResult = await _objectDetectionService.PushDetectionToQueue(commandData.DetectionQueue, detectionResult.Value, cancellationToken);
+                    var pushResult = await _objectDetectionService.PushDetectionToQueue(commandData.DetectionQueue, detectionResult.Value, commandData.RemoteStorageContainer, remoteStorageFilePath, cancellationToken);
                     if(pushResult.HasError)
                         _logger.ProcessApplicationErrors(pushResult.DomainErrors, eventId);
                 }
@@ -71,4 +85,7 @@ public class ObjectDetectionCommandData
 {
     public required string ImageQueue { get; set; }
     public required string DetectionQueue { get; set; }
+    
+    public required string RemoteStorageContainer { get; set; }
+    public required string RemoteStorageFileDirectory { get; set; }
 }

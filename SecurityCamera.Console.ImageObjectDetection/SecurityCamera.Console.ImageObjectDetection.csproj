@@ -14,6 +14,8 @@
         <ProjectReference Include="..\SecurityCamera.Infrastructure.OnnxAi\SecurityCamera.Infrastructure.OnnxAi.csproj" />
         <ProjectReference Include="..\SecurityCamera.Infrastructure.RabbitMq\SecurityCamera.Infrastructure.RabbitMq.csproj" />
         <ProjectReference Include="..\SecurityCamera.SharedKernel\SecurityCamera.SharedKernel.csproj" />
+        <ProjectReference Include="..\SecurityCamera.Infrastructure.AzureServiceBus\SecurityCamera.Infrastructure.AzureServiceBus.csproj" />
+        <ProjectReference Include="..\SecurityCamera.Infrastructure.AzureBlobStorage\SecurityCamera.Infrastructure.AzureBlobStorage.csproj" />
     </ItemGroup>
 
     <ItemGroup>

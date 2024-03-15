@@ -25,7 +25,9 @@ public class Worker : BackgroundService
         {
             CameraName = _configuration[nameof(Args.CameraName)] ?? "",
             ImageDirectory = _configuration[nameof(Args.ImagesDirPath)] ?? "",
-            QueueName = _configuration[nameof(Args.QueueName)] ?? ""
+            QueueName = _configuration[nameof(Args.QueueName)] ?? "",
+            RemoteStorageContainer = _configuration[nameof(Args.RemoteStorageContainer)] ?? "",
+            RemoteStorageFileDirectory = _configuration[nameof(Args.RemoteStorageFileDirectory)] ?? "",
         };
 
         while (true)

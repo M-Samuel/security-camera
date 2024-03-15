@@ -6,5 +6,7 @@ public enum Args
     QueueName,
     ImagesDirPath,
     CameraName,
-    RoutingKey
+    RoutingKey,
+    RemoteStorageContainer,
+    RemoteStorageFileDirectory
 }

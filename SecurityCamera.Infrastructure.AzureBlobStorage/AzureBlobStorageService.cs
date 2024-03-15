@@ -290,4 +290,45 @@ public class AzureBlobStorageService : IRemoteStorageService
         }
         
     }
+
+    public async Task<RemoteStorageFile> DownloadRemoteStorageFile(string containerName, string filePath, CancellationToken cancellationToken)
+    {
+        try
+        {
+            
+            BlobContainerClient containerClient =
+                await GetContainerClient(containerName, cancellationToken: cancellationToken);
+            
+            BlobClient blobClient = containerClient.GetBlobClient(filePath);
+
+            using MemoryStream memoryStream = new MemoryStream();
+
+            var response = await blobClient.DownloadToAsync(memoryStream, cancellationToken: cancellationToken);
+            if (response == null)
+                throw new InvalidOperationException($"Unable to download file to {filePath}");
+            if (!response.IsError)
+                throw new InvalidOperationException($"Unable to download file to {filePath}");
+
+            return new RemoteStorageFile()
+            {
+                ContainerName = containerName,
+                FilePath = filePath,
+                FileContent = memoryStream.ToArray()
+            };
+        }
+        catch (RequestFailedException rfe)
+        {
+            _logger.LogError($"HTTP error code {rfe.Status}: {rfe.ErrorCode}");
+            throw;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "UploadRemoteStorageFile failed");
+            throw;
+        }
+    }
 }

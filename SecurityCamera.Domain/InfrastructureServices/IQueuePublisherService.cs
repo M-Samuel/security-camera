@@ -2,7 +2,7 @@ using SecurityCamera.SharedKernel;
 
 namespace SecurityCamera.Domain.InfrastructureServices;
 
-public interface IQueuePublisherService : IDisposable
+public interface IQueuePublisherService<T> : IDisposable where T : QueueMessage
 {
-    Task<bool> SentMessageToQueue(QueueMessage queueMessage, CancellationToken cancellationToken);
+    Task<bool> SentMessageToQueue(T queueMessage, CancellationToken cancellationToken);
 }

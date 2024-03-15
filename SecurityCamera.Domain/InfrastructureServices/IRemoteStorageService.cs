@@ -9,4 +9,5 @@ public interface IRemoteStorageService
     Task<RemoteStorageFile> UploadRemoteStorageLargeFile(string containerName, string filePath, Stream stream, CancellationToken cancellationToken);
     Task<RemoteStorageFile> DeleteRemoteStorageFile(string containerName, string filePath, CancellationToken cancellationToken);
     IAsyncEnumerable<RemoteStorageFile> ListRemoteStorageFiles(string containerName, CancellationToken cancellationToken);
+    Task<RemoteStorageFile> DownloadRemoteStorageFile(string containerName, string filePath, CancellationToken cancellationToken);
 }

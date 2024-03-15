@@ -40,13 +40,21 @@ public class ImageRecorderCommand : ICommand<ImageRecorderCommandData, ImageReco
         
         foreach (ImageRecordedEvent imageRecordedEvent in imageRecordEvents)
         {
-            var pushResult = await _imageRecorderService.PushImageToQueue(imageRecordedEvent, commandData.QueueName, cancellationToken);
-            if(pushResult.HasError)
+            string remoteStorageFilePath = $"{commandData.RemoteStorageFileDirectory}/{imageRecordedEvent.ImageName}";
+            var saveToRemoteResult = await _imageRecorderService.SaveImageToRemoteStorage(imageRecordedEvent, commandData.RemoteStorageContainer, remoteStorageFilePath, cancellationToken);
+            if(saveToRemoteResult.HasError){
+                _logger.ProcessApplicationErrors(saveToRemoteResult.DomainErrors, eventId);
+                continue;
+            }
+            var pushResult = await _imageRecorderService.PushImagePathToQueue(imageRecordedEvent, commandData.QueueName, commandData.RemoteStorageContainer, remoteStorageFilePath, cancellationToken);
+            if(pushResult.HasError){
                 _logger.ProcessApplicationErrors(pushResult.DomainErrors, eventId);
+                continue;
+            }
 
             var queueMessage = pushResult.Value;
             if(queueMessage != null)
-                _logger.LogInformation(eventId,$"Message to queue {commandData.QueueName}, {queueMessage.Body.Length}");
+                _logger.LogInformation(eventId,$"Message to queue {commandData.QueueName}, {imageRecordedEvent.ImageName}");
         }
         
         

@@ -2,9 +2,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using SecurityCamera.Application.Command.ObjectDetection;
 using SecurityCamera.Console.ImageObjectDetection;
+using SecurityCamera.Domain.ImageRecorderDomain;
 using SecurityCamera.Domain.InfrastructureServices;
 using SecurityCamera.Domain.ObjectDetectionDomain;
 using SecurityCamera.Domain.ObjectDetectionDomain.Repository;
+using SecurityCamera.Infrastructure.AzureBlobStorage;
+using SecurityCamera.Infrastructure.AzureServiceBus;
 using SecurityCamera.Infrastructure.Database.Contexts;
 using SecurityCamera.Infrastructure.Database.Repositories;
 using SecurityCamera.Infrastructure.RabbitMq;
@@ -34,8 +37,9 @@ static void RegisterApplication(HostApplicationBuilder hostApplicationBuilder)
 
 static void RegisterInfrastructure(HostApplicationBuilder hostApplicationBuilder)
 {
-    hostApplicationBuilder.Services.AddSingleton<IQueuePublisherService, RabbitMqService>();
-    hostApplicationBuilder.Services.AddSingleton<IQueueConsumerService, RabbitMqService>();
+    hostApplicationBuilder.Services.AddSingleton<IQueuePublisherService<DetectionMessage>, AzureServiceBusService>();
+    hostApplicationBuilder.Services.AddSingleton<IQueueConsumerService<ImageRecorderOnImagePushMessage>, AzureServiceBusService>();
+    hostApplicationBuilder.Services.AddSingleton<IRemoteStorageService, AzureBlobStorageService>();
     
 
     hostApplicationBuilder.Services.AddDbContext<DatabaseContext>(
