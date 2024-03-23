@@ -14,11 +14,9 @@ namespace SecurityCamera.Infrastructure.OnnxAi.DataStructures
         [LoadColumn(1)]
         public required string Label;
 
-        public static IEnumerable<ImageNetData> ReadFromByteArray(string tempFolder, byte[] imageBytes, string imageName)
+        public static IEnumerable<ImageNetData> ReadFromByteArray(string imageLocalFilePath, string imageName)
         {
-            string imagePath = Path.Combine(tempFolder, imageName);
-            File.WriteAllBytes(imagePath, imageBytes);
-            return new  ImageNetData[] { new ImageNetData { ImagePath = imagePath, Label = imageName } };
+            return new  ImageNetData[] { new ImageNetData { ImagePath = imageLocalFilePath, Label = imageName } };
         }
     }
 }

@@ -69,10 +69,11 @@ public class ObjectDetectionCommand : ICommand<ObjectDetectionCommandData, Objec
 
             string remoteStorageFilePath = queueMessage.RemoteStorageFilePath;
 
+            string localFilePath = $"{Path.GetTempFileName()}{Path.GetExtension(queueMessage.ImageName)}";
             RemoteStorageFile remoteStorageFile =
                 await _remoteStorageService.DownloadRemoteStorageFile(_commandData.RemoteStorageContainer,
-                    remoteStorageFilePath, _cancellationToken);
-            if (remoteStorageFile.FileContent == null || remoteStorageFile.FileContent.Length == 0)
+                    remoteStorageFilePath, localFilePath, _cancellationToken);
+            if (!File.Exists(localFilePath) || new FileInfo(localFilePath).Length == 0)
             {
                 _logger.LogError(eventId,
                     $"No image content at location:{_commandData.RemoteStorageContainer} {_commandData.RemoteStorageFileDirectory}");
@@ -82,7 +83,7 @@ public class ObjectDetectionCommand : ICommand<ObjectDetectionCommandData, Objec
             ImageRecordedEvent imageRecordedEvent = new(
                 OccurrenceDateTime: DateTime.Now,
                 CameraName: queueMessage.CameraName ?? "",
-                ImageBytes: remoteStorageFile.FileContent,
+                TempLocalImagePath: localFilePath,
                 ImageCreatedDateTime: queueMessage.ImageCreatedDateTime,
                 ImageName: queueMessage.ImageName ?? ""
             );

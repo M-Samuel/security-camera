@@ -33,8 +33,8 @@ public class ObjectDetectionService : IObjectDetectionService
         Result<DetectionEvent?> result = new Result<DetectionEvent?>(null);
         result
             .AddErrorIf(
-                () => imageRecordedEvent.ImageBytes.Length == 0, 
-                new ArgumentError("ImageBytes cannot be empty"))
+                () => !File.Exists(imageRecordedEvent.TempLocalImagePath), 
+                new ArgumentError("Image file does not exists"))
             .AddErrorIf(
                 () => string.IsNullOrWhiteSpace(imageRecordedEvent.ImageName),
                 new ArgumentError("ImageName cannot be empty"))
@@ -57,7 +57,7 @@ public class ObjectDetectionService : IObjectDetectionService
         Result<ImageDetection> result = new Result<ImageDetection>(null);
         result
             .AddErrorIf(
-                () => detectionEvent.ImageBytes.Length == 0, 
+                () => !File.Exists(detectionEvent.TempLocalImagePath), 
                 new ArgumentError("ImageBytes cannot be empty"))
             .AddErrorIf(
                 () => string.IsNullOrWhiteSpace(detectionEvent.ImageName),
@@ -71,7 +71,7 @@ public class ObjectDetectionService : IObjectDetectionService
 
         ImageDetection imageDetection = new(){
             CameraName = detectionEvent.CameraName,
-            ImageSize = detectionEvent.ImageBytes.Length,
+            ImageSize = new FileInfo(detectionEvent.TempLocalImagePath).Length,
             ImageName = detectionEvent.ImageName,
             DetectionDateTime = detectionEvent.ImageCreatedDateTime,
             DetectionType = detectionEvent.DetectionType,
@@ -110,10 +110,11 @@ public class ObjectDetectionService : IObjectDetectionService
             RemoteStorageFilePath = remoteStorageFilePath
         };
         bool messageSent = await _queuePublisherService.SentMessageToQueue(queueMessage, cancellationToken);
-        await _remoteStorageService.UploadRemoteStorageFile(remoteStorageContainer, remoteStorageFilePath, detectionEvent.ImageBytes, cancellationToken);
+        await _remoteStorageService.UploadRemoteStorageFile(remoteStorageContainer, remoteStorageFilePath, File.OpenRead(detectionEvent.TempLocalImagePath), cancellationToken);
         result.AddErrorIf(() => !messageSent, new InvalidOperationError("Message not published to queue"));
-        
         result.UpdateValueIfNoError(queueMessage);
+        
+        File.Delete(detectionEvent.TempLocalImagePath);
         return result;
     }
 }

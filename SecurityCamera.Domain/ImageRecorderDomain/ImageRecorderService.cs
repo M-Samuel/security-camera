@@ -38,16 +38,9 @@ public class ImageRecorderService : IImageRecorderService
             Directory.EnumerateFiles(startDirectoryScanEvent.Directory, "*.jpg")
         ).ToArray();
         ImageRecordedEvent[] imageRecordedEvents  = await ConvertToImageDetectionEvent(recordedFiles, cameraName, cancellationToken).ToArrayAsync(cancellationToken);
-        DeleteImages(recordedFiles);
         result.UpdateValueIfNoError(imageRecordedEvents);
 
         return result;
-    }
-
-    private static void DeleteImages(string[] recordedFiles)
-    {
-        foreach (string filePath in recordedFiles)
-            File.Delete(filePath);
     }
 
     private async IAsyncEnumerable<ImageRecordedEvent> ConvertToImageDetectionEvent(string[] recordedFiles, string cameraName, [EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -58,7 +51,7 @@ public class ImageRecorderService : IImageRecorderService
             ImageRecordedEvent imageDetectedEvent = new ImageRecordedEvent(
                 DateTime.UtcNow,
                 cameraName,
-                await File.ReadAllBytesAsync(filePath, cancellationToken),
+                filePath,
                 Path.GetFileName(filePath),
                 new FileInfo(filePath).CreationTimeUtc
             );
@@ -99,15 +92,16 @@ public class ImageRecorderService : IImageRecorderService
                 () => string.IsNullOrWhiteSpace(imageRecordedEvent.ImageName),
                 new ArgumentError("ImageName cannot be null/empty"))
             .AddErrorIf(
-                () => imageRecordedEvent.ImageBytes == null || imageRecordedEvent.ImageBytes.Length == 0,
-                new ArgumentError("ImageBytes does not contain data"));
+                () => string.IsNullOrWhiteSpace(imageRecordedEvent.TempLocalImagePath) || !File.Exists(imageRecordedEvent.TempLocalImagePath),
+                new ArgumentError("TempLocalImagePath does not exists or is not given"));
         
         if(result.HasError)
             return result;
 
         await _remoteStorageService.CreateRemoteStorageContainer(remoteStorageContainer, cancellationToken);
-        await _remoteStorageService.UploadRemoteStorageLargeFile(remoteStorageContainer, remoteStorageFilePath, new MemoryStream(imageRecordedEvent.ImageBytes), cancellationToken);
-
+        await _remoteStorageService.UploadRemoteStorageLargeFile(remoteStorageContainer, remoteStorageFilePath, File.OpenRead(imageRecordedEvent.TempLocalImagePath), cancellationToken);
+        
+        File.Delete(imageRecordedEvent.TempLocalImagePath);
         return result;
     }
 }

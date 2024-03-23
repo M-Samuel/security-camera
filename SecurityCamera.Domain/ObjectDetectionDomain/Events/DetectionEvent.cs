@@ -5,7 +5,7 @@ namespace SecurityCamera.Domain.ObjectDetectionDomain.Events;
 public record DetectionEvent(
     DateTime OccurrenceDateTime, 
     string CameraName,
-    byte[] ImageBytes,
+    string TempLocalImagePath,
     string ImageName, 
     DateTime ImageCreatedDateTime,
     DetectionType DetectionType

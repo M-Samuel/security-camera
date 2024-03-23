@@ -7,6 +7,7 @@ using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SecurityCamera.Domain.InfrastructureServices;
+using FileStream = System.IO.FileStream;
 
 namespace SecurityCamera.Infrastructure.AzureBlobStorage;
 
@@ -346,6 +347,63 @@ public class AzureBlobStorageService : IRemoteStorageService
                 ContainerName = containerName,
                 FilePath = filePath,
                 FileContent = memoryStream.ToArray()
+            };
+        }
+        catch (RequestFailedException rfe)
+        {
+            _logger.LogError($"HTTP error code {rfe.Status}: {rfe.ErrorCode}");
+            throw;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "DownloadRemoteStorageFile failed");
+            throw;
+        }
+    }
+    
+    public async Task<RemoteStorageFile> DownloadRemoteStorageFile(string containerName, string filePath, string localFilePath, CancellationToken cancellationToken)
+    {
+        try
+        {
+            
+            BlobContainerClient containerClient =
+                await GetContainerClient(containerName, cancellationToken: cancellationToken);
+            
+            BlobClient blobClient = containerClient.GetBlobClient(filePath);
+
+            var transferOptions = new StorageTransferOptions
+            {
+                // Set the maximum number of parallel transfer workers
+                MaximumConcurrency = 2,
+
+                // Set the initial transfer length to 1 MiB
+                InitialTransferSize = 8 * 1024 * 1024,
+
+                // Set the maximum length of a transfer to 1 MiB
+                MaximumTransferSize = 4 * 1024 * 1024
+            };
+
+            BlobDownloadToOptions downloadOptions = new BlobDownloadToOptions()
+            {
+                TransferOptions = transferOptions
+            };
+
+            using FileStream stream = File.Create(localFilePath);
+
+            var response = await blobClient.DownloadToAsync(stream, downloadOptions, cancellationToken: cancellationToken);
+            if (response == null)
+                throw new InvalidOperationException($"Unable to download file to {filePath}");
+            if (response.IsError)
+                throw new InvalidOperationException($"Unable to download file to {filePath}");
+
+            return new RemoteStorageFile()
+            {
+                ContainerName = containerName,
+                FilePath = filePath
             };
         }
         catch (RequestFailedException rfe)
