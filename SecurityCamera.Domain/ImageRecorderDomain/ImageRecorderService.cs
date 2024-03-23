@@ -55,7 +55,7 @@ public class ImageRecorderService : IImageRecorderService
                 Path.GetFileName(filePath),
                 new FileInfo(filePath).CreationTimeUtc
             );
-            yield return imageDetectedEvent;
+            yield return await Task.FromResult(imageDetectedEvent);
         }
     }
     
