@@ -10,6 +10,7 @@ using SecurityCamera.Infrastructure.AzureBlobStorage;
 using SecurityCamera.Infrastructure.AzureServiceBus;
 using SecurityCamera.Infrastructure.Database.Contexts;
 using SecurityCamera.Infrastructure.Database.Repositories;
+using SecurityCamera.Infrastructure.OnnxAi;
 using SecurityCamera.Infrastructure.RabbitMq;
 using SecurityCamera.SharedKernel;
 
@@ -27,7 +28,7 @@ host.Run();
 
 static void RegisterDomainServices(HostApplicationBuilder hostApplicationBuilder)
 {
-    hostApplicationBuilder.Services.AddSingleton<IObjectDetectionService, ObjectDetectionService>();
+    hostApplicationBuilder.Services.AddScoped<IObjectDetectionService, ObjectDetectionService>();
 }
 
 static void RegisterApplication(HostApplicationBuilder hostApplicationBuilder)
@@ -40,6 +41,7 @@ static void RegisterInfrastructure(HostApplicationBuilder hostApplicationBuilder
     hostApplicationBuilder.Services.AddSingleton<IQueuePublisherService<DetectionMessage>, AzureServiceBusService>();
     hostApplicationBuilder.Services.AddSingleton<IQueueConsumerService<ImageRecorderOnImagePushMessage>, AzureServiceBusService>();
     hostApplicationBuilder.Services.AddSingleton<IRemoteStorageService, AzureBlobStorageService>();
+    hostApplicationBuilder.Services.AddSingleton<IAiDetectionService, OnnxAiService>();
     
 
     hostApplicationBuilder.Services.AddDbContext<DatabaseContext>(

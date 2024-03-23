@@ -8,12 +8,14 @@ public class Worker : BackgroundService
     private readonly ILogger<Worker> _logger;
     private readonly IConfiguration _configuration;
     private readonly IServiceProvider _serviceProvider;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
 
-    public Worker(ILogger<Worker> logger, IConfiguration configuration, IServiceProvider serviceProvider)
+    public Worker(ILogger<Worker> logger, IConfiguration configuration, IServiceProvider serviceProvider, IServiceScopeFactory serviceScopeFactory)
     {
         _logger = logger;
         _configuration = configuration;
         _serviceProvider = serviceProvider;
+        _serviceScopeFactory = serviceScopeFactory;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -30,7 +32,8 @@ public class Worker : BackgroundService
 
         while (true)
         {
-            ObjectDetectionCommand? objectDetectionCommand = _serviceProvider.GetService<ObjectDetectionCommand>();
+            using IServiceScope scope = _serviceScopeFactory.CreateScope();
+            ObjectDetectionCommand? objectDetectionCommand = scope.ServiceProvider.GetService<ObjectDetectionCommand>();
             if (objectDetectionCommand == null)
                 throw new InvalidOperationException($"{nameof(ObjectDetectionCommand)} service not registered");
             

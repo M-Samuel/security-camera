@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SecurityCamera.Domain.ImageRecorderDomain;
 using SecurityCamera.Domain.ObjectDetectionDomain;
+using SecurityCamera.SharedKernel;
 
 namespace SecurityCamera.Infrastructure.AzureServiceBus;
 
@@ -16,12 +17,20 @@ IQueuePublisherService<DetectionMessage>
     private readonly ILogger<AzureServiceBusService> _logger;
     private readonly ServiceBusClient _client;
 
+    private readonly object _objectLock;
+
+    private Task? _imageRecorderConsumerTask;
+    private Task? _detectionConsumerTask;
+    // public event EventHandler<ImageRecorderOnImagePushMessage> MessageReceived;
+    // public event EventHandler<DetectionMessage> MessageReceived;
+
     public AzureServiceBusService(IConfiguration configuration, ILogger<AzureServiceBusService> logger)
     {
         ServiceBusClientOptions options = new ServiceBusClientOptions
         {
             TransportType = ServiceBusTransportType.AmqpWebSockets
         };
+        _objectLock = new();
         _logger = logger;
         _client = new ServiceBusClient(configuration[nameof(EnvVars.AzureServiceBusConnectionString)], options);
     }
@@ -30,28 +39,55 @@ IQueuePublisherService<DetectionMessage>
         Task.Factory.StartNew(async () => await _client.DisposeAsync());
     }
 
-    public async Task GetMessageFromQueue(string queueName, Action<ImageRecorderOnImagePushMessage> onMessageReceived, CancellationToken cancellationToken)
+    private event EventHandler<ImageRecorderOnImagePushMessage>? ImageRecorderMessageReceived;
+    event EventHandler<ImageRecorderOnImagePushMessage>? IQueueConsumerService<ImageRecorderOnImagePushMessage>.MessageReceived
     {
-        var processor = _client.CreateProcessor(queueName, new ServiceBusProcessorOptions());
-        Task consumerTask = Task.Factory.StartNew(async () =>
-        {
-            // add handler to process messages
-            processor.ProcessMessageAsync += async (args) =>
+        add {
+            lock (_objectLock)
             {
-                ServiceBusReceivedMessage message = args.Message;
-                _logger.LogInformation($"Received message: {message.Body}");
-                onMessageReceived(message.Body.ToObjectFromJson<ImageRecorderOnImagePushMessage>());
-                await args.CompleteMessageAsync(args.Message);
-            };
+                ImageRecorderMessageReceived -= value;
+                ImageRecorderMessageReceived += value;
+            }
+                
+        }
+        remove
+        {
+            lock (_objectLock)
+                ImageRecorderMessageReceived -= value;
+        }
+    }
 
-            // add handler to process any errors
-            processor.ProcessErrorAsync += ErrorHandler;
+    public async Task GetMessageFromQueue(string queueName, EventHandler<ImageRecorderOnImagePushMessage> subscriber, CancellationToken cancellationToken)
+    {
+        IQueueConsumerService<ImageRecorderOnImagePushMessage> consumer = this;
+        consumer.MessageReceived += subscriber;
+        
+        if (_imageRecorderConsumerTask == null)
+        {
+            var processor = _client.CreateProcessor(queueName, new ServiceBusProcessorOptions());
+            _imageRecorderConsumerTask = Task.Factory.StartNew(async () =>
+            {
+                // add handler to process messages
+                processor.ProcessMessageAsync += async (args) =>
+                {
+                    ServiceBusReceivedMessage message = args.Message;
+                    _logger.LogInformation($"Received message: {message.Body}");
+                    ImageRecorderMessageReceived?.Invoke(this, message.Body.ToObjectFromJson<ImageRecorderOnImagePushMessage>());
+                    //await args.CompleteMessageAsync(args.Message, cancellationToken);
+                    await Task.CompletedTask;
+                };
 
-            // start processing 
-            await processor.StartProcessingAsync(cancellationToken);
-        }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                // add handler to process any errors
+                processor.ProcessErrorAsync += ErrorHandler;
 
-        await Task.CompletedTask;
+                // start processing 
+                await processor.StartProcessingAsync(cancellationToken);
+            }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+        
+
+            await Task.CompletedTask;
+        }
+        
         
     }
 
@@ -82,28 +118,52 @@ IQueuePublisherService<DetectionMessage>
         }
     }
 
-    public async Task GetMessageFromQueue(string queueName, Action<DetectionMessage> onMessageReceived, CancellationToken cancellationToken)
+    private event EventHandler<DetectionMessage>? DetectionMessageReceived;
+    event EventHandler<DetectionMessage>? IQueueConsumerService<DetectionMessage>.MessageReceived
     {
-        var processor = _client.CreateProcessor(queueName, new ServiceBusProcessorOptions());
-        Task consumerTask = Task.Factory.StartNew(async () =>
-        {
-            // add handler to process messages
-            processor.ProcessMessageAsync += async (args) =>
+        add {
+            lock (_objectLock)
             {
-                ServiceBusReceivedMessage message = args.Message;
-                _logger.LogInformation($"Received message: {message.Body}");
-                onMessageReceived(message.Body.ToObjectFromJson<DetectionMessage>());
-                await args.CompleteMessageAsync(args.Message, cancellationToken);
-            };
+                DetectionMessageReceived -= value;
+                DetectionMessageReceived += value;
+            }
+        }
+        remove
+        {
+            lock (_objectLock)
+                DetectionMessageReceived -= value;
+        }
+    }
 
-            // add handler to process any errors
-            processor.ProcessErrorAsync += ErrorHandler;
+    public async Task GetMessageFromQueue(string queueName, EventHandler<DetectionMessage> subscriber, CancellationToken cancellationToken)
+    {
+        IQueueConsumerService<DetectionMessage> consumer = this;
+        consumer.MessageReceived += subscriber;
+        
+        if (_detectionConsumerTask == null)
+        {
+            var processor = _client.CreateProcessor(queueName, new ServiceBusProcessorOptions());
+            _detectionConsumerTask = Task.Factory.StartNew(async () =>
+            {
+                // add handler to process messages
+                processor.ProcessMessageAsync += async (args) =>
+                {
+                    ServiceBusReceivedMessage message = args.Message;
+                    _logger.LogInformation($"Received message: {message.Body}");
+                    DetectionMessageReceived?.Invoke(this, message.Body.ToObjectFromJson<DetectionMessage>());
+                    await args.CompleteMessageAsync(args.Message, cancellationToken);
+                };
 
-            // start processing 
-            await processor.StartProcessingAsync(cancellationToken);
-        }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                // add handler to process any errors
+                processor.ProcessErrorAsync += ErrorHandler;
 
-        await Task.CompletedTask;
+                // start processing 
+                await processor.StartProcessingAsync(cancellationToken);
+            }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+        
+
+            await Task.CompletedTask;
+        }
         
     }
 

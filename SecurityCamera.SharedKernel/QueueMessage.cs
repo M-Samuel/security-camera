@@ -1,10 +1,8 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using SecurityCamera.SharedKernel;
 
-namespace SecurityCamera.Domain.InfrastructureServices;
+namespace SecurityCamera.SharedKernel;
 
-public class QueueMessage
+public class QueueMessage : EventArgs
 {
     public required string QueueName { get; set; }
 
@@ -22,4 +20,3 @@ public class QueueMessage
         return JsonSerializer.Deserialize<T>(byteArray);
     }
 }
-

@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using Azure;
 using Azure.Storage;
@@ -13,6 +14,8 @@ public class AzureBlobStorageService : IRemoteStorageService
 {
     private readonly BlobServiceClient _blobServiceClient;
     private readonly ILogger<AzureBlobStorageService> _logger;
+
+    private readonly ConcurrentDictionary<string, BlobContainerClient> _blobContainerClients = new ();
 
     public AzureBlobStorageService(IConfiguration configuration, ILogger<AzureBlobStorageService> logger)
     {
@@ -62,9 +65,14 @@ public class AzureBlobStorageService : IRemoteStorageService
     {
         try
         {
+            if (_blobContainerClients.TryGetValue(containerName, out var client))
+                return client;
+            
             BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
             if (!await containerClient.ExistsAsync(cancellationToken: cancellationToken))
                 throw new InvalidOperationException($"Container {containerName} does not exists");
+
+            _blobContainerClients.TryAdd(containerName, containerClient);
             return containerClient;
         }
         catch (RequestFailedException rfe)

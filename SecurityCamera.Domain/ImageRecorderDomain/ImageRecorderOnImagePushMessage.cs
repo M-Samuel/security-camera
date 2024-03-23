@@ -1,4 +1,5 @@
 using SecurityCamera.Domain.InfrastructureServices;
+using SecurityCamera.SharedKernel;
 
 namespace SecurityCamera.Domain.ImageRecorderDomain;
 

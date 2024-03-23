@@ -1,5 +1,4 @@
-﻿using System.Text;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -19,6 +18,9 @@ IQueuePublisherService<DetectionMessage>
     private readonly IModel _publisherChannel;
     private readonly IModel _consumerChannel;
     private readonly ILogger<RabbitMqService> _logger;
+    private readonly object _objectLock;
+    private Task? _detectionConsumerTask;
+    private Task? _imageRecorderPushConsumerTask;
 
     public RabbitMqService(ILogger<RabbitMqService> logger, IConfiguration configuration)
     {
@@ -28,33 +30,57 @@ IQueuePublisherService<DetectionMessage>
         _connection = factory.CreateConnection();
         _publisherChannel = _connection.CreateModel();
         _consumerChannel = _connection.CreateModel();
+        _objectLock = new();
     }
 
-    public async Task GetMessageFromQueue(string queueName, Action<ImageRecorderOnImagePushMessage> onMessageReceived, CancellationToken cancellationToken)
+    public async Task GetMessageFromQueue(string queueName, EventHandler<ImageRecorderOnImagePushMessage> subscriber, CancellationToken cancellationToken)
     {
         _consumerChannel.QueueDeclare(queue: queueName,
-                        durable: true,
-                        exclusive: false,
-                        autoDelete: false,
-                        arguments: null);
+            durable: true,
+            exclusive: false,
+            autoDelete: false,
+            arguments: null);
 
-        Task consumerTask = Task.Factory.StartNew(() =>
+        IQueueConsumerService<ImageRecorderOnImagePushMessage> sender = this;
+        sender.MessageReceived += subscriber;
+        
+        if (_imageRecorderPushConsumerTask == null)
         {
-            var consumer = new EventingBasicConsumer(_consumerChannel);
-            consumer.Received += (model, basicDeliverEventArgs) =>
+            _imageRecorderPushConsumerTask = Task.Factory.StartNew(() =>
             {
-                _logger.LogInformation($"Message Received from the queue {queueName} {basicDeliverEventArgs.DeliveryTag}");
-                byte[] body = basicDeliverEventArgs.Body.ToArray();
-                var message = QueueMessage.FromByteArray<ImageRecorderOnImagePushMessage>(body);
-                if(message != null)
-                    onMessageReceived(message);
-            };
-            _consumerChannel.BasicConsume(queue: queueName,
-                                autoAck: true,
-                                consumer: consumer);
-        }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
-
+                var rmqConsumer = new EventingBasicConsumer(_consumerChannel);
+                rmqConsumer.Received += (model, basicDeliverEventArgs) =>
+                {
+                    _logger.LogInformation($"Message Received from the queue {queueName} {basicDeliverEventArgs.DeliveryTag}");
+                    byte[] body = basicDeliverEventArgs.Body.ToArray();
+                    var message = ImageRecorderOnImagePushMessage.FromByteArray<ImageRecorderOnImagePushMessage>(body);
+                    if(message != null)
+                        ImageRecorderMessageReceived?.Invoke(this, message);
+                };
+                _consumerChannel.BasicConsume(queue: queueName,
+                    autoAck: true,
+                    consumer: rmqConsumer);
+            }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+        }
         await Task.CompletedTask;
+    }
+    
+    private event EventHandler<ImageRecorderOnImagePushMessage>? ImageRecorderMessageReceived;
+    event EventHandler<ImageRecorderOnImagePushMessage>? IQueueConsumerService<ImageRecorderOnImagePushMessage>.MessageReceived
+    {
+        add {
+            lock (_objectLock)
+            {
+                ImageRecorderMessageReceived -= value;
+                ImageRecorderMessageReceived += value;
+            }
+                
+        }
+        remove
+        {
+            lock (_objectLock)
+                ImageRecorderMessageReceived -= value;
+        }
     }
 
     public async Task<bool> SentMessageToQueue(ImageRecorderOnImagePushMessage queueMessage, CancellationToken cancellationToken)
@@ -87,7 +113,7 @@ IQueuePublisherService<DetectionMessage>
         
     }
 
-    public async Task GetMessageFromQueue(string queueName, Action<DetectionMessage> onMessageReceived, CancellationToken cancellationToken)
+    public async Task GetMessageFromQueue(string queueName, EventHandler<DetectionMessage> subscriber, CancellationToken cancellationToken)
     {
         _consumerChannel.QueueDeclare(queue: queueName,
                         durable: true,
@@ -95,23 +121,45 @@ IQueuePublisherService<DetectionMessage>
                         autoDelete: false,
                         arguments: null);
 
-        Task consumerTask = Task.Factory.StartNew(() =>
+        IQueueConsumerService<DetectionMessage> sender = this;
+        sender.MessageReceived += subscriber;
+        
+        if (_detectionConsumerTask == null)
         {
-            var consumer = new EventingBasicConsumer(_consumerChannel);
-            consumer.Received += (model, basicDeliverEventArgs) =>
+            _detectionConsumerTask = Task.Factory.StartNew(() =>
             {
-                _logger.LogInformation($"Message Received from the queue {queueName} {basicDeliverEventArgs.DeliveryTag}");
-                byte[] body = basicDeliverEventArgs.Body.ToArray();
-                var message = QueueMessage.FromByteArray<DetectionMessage>(body);
-                if(message != null)
-                    onMessageReceived(message);
-            };
-            _consumerChannel.BasicConsume(queue: queueName,
-                                autoAck: true,
-                                consumer: consumer);
-        }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
-
+                var rmqConsumer = new EventingBasicConsumer(_consumerChannel);
+                rmqConsumer.Received += (model, basicDeliverEventArgs) =>
+                {
+                    _logger.LogInformation($"Message Received from the queue {queueName} {basicDeliverEventArgs.DeliveryTag}");
+                    byte[] body = basicDeliverEventArgs.Body.ToArray();
+                    var message = DetectionMessage.FromByteArray<DetectionMessage>(body);
+                    if(message != null)
+                        DetectionMessageReceived?.Invoke(this, message);
+                };
+                _consumerChannel.BasicConsume(queue: queueName,
+                    autoAck: true,
+                    consumer: rmqConsumer);
+            }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+        }
         await Task.CompletedTask;
+    }
+    
+    private event EventHandler<DetectionMessage>? DetectionMessageReceived;
+    event EventHandler<DetectionMessage>? IQueueConsumerService<DetectionMessage>.MessageReceived
+    {
+        add {
+            lock (_objectLock)
+            {
+                DetectionMessageReceived -= value;
+                DetectionMessageReceived += value;
+            }
+        }
+        remove
+        {
+            lock (_objectLock)
+                DetectionMessageReceived -= value;
+        }
     }
 
     public async Task<bool> SentMessageToQueue(DetectionMessage queueMessage, CancellationToken cancellationToken)
