@@ -93,7 +93,7 @@ IQueuePublisherService<DetectionMessage>
                 ServiceBusReceivedMessage message = args.Message;
                 _logger.LogInformation($"Received message: {message.Body}");
                 onMessageReceived(message.Body.ToObjectFromJson<DetectionMessage>());
-                await args.CompleteMessageAsync(args.Message);
+                await args.CompleteMessageAsync(args.Message, cancellationToken);
             };
 
             // add handler to process any errors

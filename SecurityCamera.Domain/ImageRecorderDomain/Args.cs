@@ -3,7 +3,7 @@ namespace SecurityCamera.Domain.ImageRecorderDomain;
 public enum Args
 {
     RabbitMqHostName,
-    QueueName,
+    ServiceBusQueueImageRecords,
     ImagesDirPath,
     CameraName,
     RoutingKey,

@@ -18,20 +18,20 @@ public class Worker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        EventId eventId = new EventId(new Random().Next(), Guid.NewGuid().ToString());
-        _logger.LogInformation(eventId, "Starting...");
+        _logger.LogInformation("Starting...");
         
         ImageRecorderCommandData commandData = new()
         {
             CameraName = _configuration[nameof(Args.CameraName)] ?? "",
             ImageDirectory = _configuration[nameof(Args.ImagesDirPath)] ?? "",
-            QueueName = _configuration[nameof(Args.QueueName)] ?? "",
+            QueueName = _configuration[nameof(Args.ServiceBusQueueImageRecords)] ?? "",
             RemoteStorageContainer = _configuration[nameof(Args.RemoteStorageContainer)] ?? "",
             RemoteStorageFileDirectory = _configuration[nameof(Args.RemoteStorageFileDirectory)] ?? "",
         };
 
         while (true)
         {
+            EventId eventId = new EventId(new Random().Next(), Guid.NewGuid().ToString());
             stoppingToken.ThrowIfCancellationRequested();
             try
             {

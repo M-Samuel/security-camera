@@ -4,9 +4,10 @@ using SecurityCamera.Domain.ImageRecorderDomain;
 using SecurityCamera.Domain.InfrastructureServices;
 using SecurityCamera.Infrastructure.AzureBlobStorage;
 using SecurityCamera.Infrastructure.AzureServiceBus;
-using SecurityCamera.Infrastructure.RabbitMq;
+using RabbitMqArgs = SecurityCamera.Infrastructure.RabbitMq.Args;
 using BlobEnvVars = SecurityCamera.Infrastructure.AzureBlobStorage.EnvVars;
 using BusEnvVars = SecurityCamera.Infrastructure.AzureServiceBus.EnvVars;
+using DomainArgs = SecurityCamera.Domain.ImageRecorderDomain.Args;
 
 var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddHostedService<Worker>();
@@ -47,21 +48,21 @@ static void RegisterCrossCuttingConcerns(HostApplicationBuilder hostApplicationB
 
 static void ValidateArgs(IConfiguration configuration)
 {
-    if(string.IsNullOrWhiteSpace(configuration[nameof(Args.CameraName)]))
-        throw new ArgumentNullException(nameof(Args.CameraName));
-    if(string.IsNullOrWhiteSpace(configuration[nameof(Args.QueueName)]))
-        throw new ArgumentNullException(nameof(Args.QueueName));
-    // if(string.IsNullOrWhiteSpace(configuration[nameof(Args.RoutingKey)]))
-    //     throw new ArgumentNullException(nameof(Args.RoutingKey));
-    if(string.IsNullOrWhiteSpace(configuration[nameof(Args.ImagesDirPath)]))
-        throw new ArgumentNullException(nameof(Args.ImagesDirPath));
-    // if(string.IsNullOrWhiteSpace(configuration[nameof(Args.RabbitMqHostName)]))
-    //     throw new ArgumentNullException(nameof(Args.RabbitMqHostName));
+    if(string.IsNullOrWhiteSpace(configuration[nameof(DomainArgs.CameraName)]))
+        throw new ArgumentNullException(nameof(DomainArgs.CameraName));
+    if(string.IsNullOrWhiteSpace(configuration[nameof(DomainArgs.ServiceBusQueueImageRecords)]))
+        throw new ArgumentNullException(nameof(DomainArgs.ServiceBusQueueImageRecords));
+    // if(string.IsNullOrWhiteSpace(configuration[nameof(RabbitMqArgs.RoutingKey)]))
+    //     throw new ArgumentNullException(nameof(RabbitMqArgs.RoutingKey));
+    if(string.IsNullOrWhiteSpace(configuration[nameof(DomainArgs.ImagesDirPath)]))
+        throw new ArgumentNullException(nameof(DomainArgs.ImagesDirPath));
+    // if(string.IsNullOrWhiteSpace(configuration[nameof(RabbitMqArgs.RabbitMqHostName)]))
+    //     throw new ArgumentNullException(nameof(RabbitMqArgs.RabbitMqHostName));
 
-    if(string.IsNullOrWhiteSpace(configuration[nameof(Args.RemoteStorageContainer)]))
-        throw new ArgumentNullException(nameof(Args.RemoteStorageContainer));
-    if(string.IsNullOrWhiteSpace(configuration[nameof(Args.RemoteStorageFileDirectory)]))
-        throw new ArgumentNullException(nameof(Args.RemoteStorageFileDirectory));
+    if(string.IsNullOrWhiteSpace(configuration[nameof(DomainArgs.RemoteStorageContainer)]))
+        throw new ArgumentNullException(nameof(DomainArgs.RemoteStorageContainer));
+    if(string.IsNullOrWhiteSpace(configuration[nameof(DomainArgs.RemoteStorageFileDirectory)]))
+        throw new ArgumentNullException(nameof(DomainArgs.RemoteStorageFileDirectory));
     if(string.IsNullOrWhiteSpace(configuration[nameof(BlobEnvVars.AzureStorageConnectionString)]))
         throw new ArgumentNullException(nameof(BlobEnvVars.AzureStorageConnectionString));
     if(string.IsNullOrWhiteSpace(configuration[nameof(BusEnvVars.AzureServiceBusConnectionString)]))
