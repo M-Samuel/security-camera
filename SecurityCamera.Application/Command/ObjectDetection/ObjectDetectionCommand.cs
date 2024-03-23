@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SecurityCamera.Domain.ImageRecorderDomain;
 using SecurityCamera.Domain.ImageRecorderDomain.Events;
@@ -10,25 +11,25 @@ namespace SecurityCamera.Application.Command.ObjectDetection;
 public class ObjectDetectionCommand : ICommand<ObjectDetectionCommandData, ObjectDetectionCommandResult>
 {
     private readonly ILogger<ObjectDetectionCommand> _logger;
-    private readonly IObjectDetectionService _objectDetectionService;
     private readonly IQueueConsumerService<ImageRecorderOnImagePushMessage> _queueConsumerService;
     private readonly IRemoteStorageService _remoteStorageService;
     private ObjectDetectionCommandData? _commandData;
     private EventId _eventId;
     private CancellationToken _cancellationToken;
     private EventHandler<ImageRecorderOnImagePushMessage>? _eventHandler;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
 
     public ObjectDetectionCommand(
         ILogger<ObjectDetectionCommand> logger,
-        IObjectDetectionService objectDetectionService,
         IQueueConsumerService<ImageRecorderOnImagePushMessage> queueConsumerService,
-        IRemoteStorageService remoteStorageService
+        IRemoteStorageService remoteStorageService,
+        IServiceScopeFactory serviceScopeFactory
     )
     {
         _logger = logger;
-        _objectDetectionService = objectDetectionService;
         _queueConsumerService = queueConsumerService;
         _remoteStorageService = remoteStorageService;
+        _serviceScopeFactory = serviceScopeFactory;
     }
 
     public async Task<ObjectDetectionCommandResult> ProcessCommandAsync(ObjectDetectionCommandData commandData, EventId eventId, CancellationToken cancellationToken)
@@ -43,8 +44,7 @@ public class ObjectDetectionCommand : ICommand<ObjectDetectionCommandData, Objec
             commandData.ImageQueue,
             _eventHandler,
             cancellationToken);
-        
-        
+
         return await Task.FromResult(new ObjectDetectionCommandResult());
     }
 
@@ -54,14 +54,19 @@ public class ObjectDetectionCommand : ICommand<ObjectDetectionCommandData, Objec
     }
 
     private async Task ProcessMessage(ImageRecorderOnImagePushMessage queueMessage)
-    {
+    { 
+        EventId eventId = new EventId((int)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds, Guid.NewGuid().ToString());
         try
         {
+            using var scope = _serviceScopeFactory.CreateScope();
+            IObjectDetectionService objectDetectionService = scope.ServiceProvider.GetRequiredService<IObjectDetectionService>();
+            IUnitOfWork unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            
             if (_commandData == null)
                 return;
-            if(string.IsNullOrWhiteSpace(queueMessage.RemoteStorageFilePath))
+            if (string.IsNullOrWhiteSpace(queueMessage.RemoteStorageFilePath))
                 return;
-            
+
             string remoteStorageFilePath = queueMessage.RemoteStorageFilePath;
 
             RemoteStorageFile remoteStorageFile =
@@ -69,7 +74,7 @@ public class ObjectDetectionCommand : ICommand<ObjectDetectionCommandData, Objec
                     remoteStorageFilePath, _cancellationToken);
             if (remoteStorageFile.FileContent == null || remoteStorageFile.FileContent.Length == 0)
             {
-                _logger.LogError(_eventId,
+                _logger.LogError(eventId,
                     $"No image content at location:{_commandData.RemoteStorageContainer} {_commandData.RemoteStorageFileDirectory}");
                 return;
             }
@@ -83,36 +88,43 @@ public class ObjectDetectionCommand : ICommand<ObjectDetectionCommandData, Objec
             );
 
             var detectionResult =
-                await _objectDetectionService.LaunchDetectionAlgorithm(imageRecordedEvent, _cancellationToken);
+                await objectDetectionService.LaunchDetectionAlgorithm(imageRecordedEvent, _cancellationToken);
             if (detectionResult.HasError)
             {
-                _logger.ProcessApplicationErrors(detectionResult.DomainErrors, _eventId);
+                _logger.ProcessApplicationErrors(detectionResult.DomainErrors, eventId);
                 return;
             }
 
             if (detectionResult.Value == null)
             {
-                _logger.LogInformation(_eventId, "No detection result");
+                _logger.LogInformation(eventId, "No detection result");
                 return;
             }
 
-            var saveResult = await _objectDetectionService.SaveDetectionToDb(detectionResult.Value,
+            var saveResult = await objectDetectionService.SaveDetectionToDb(detectionResult.Value,
                 _commandData.RemoteStorageContainer, remoteStorageFilePath, _cancellationToken);
             if (saveResult.HasError)
-                _logger.ProcessApplicationErrors(saveResult.DomainErrors, _eventId);
-            else
             {
-                var pushResult = await _objectDetectionService.PushDetectionToQueue(_commandData.DetectionQueue,
-                    detectionResult.Value, _commandData.RemoteStorageContainer, remoteStorageFilePath,
-                    _cancellationToken);
-                if (pushResult.HasError)
-                    _logger.ProcessApplicationErrors(pushResult.DomainErrors, _eventId);
+                _logger.ProcessApplicationErrors(saveResult.DomainErrors, eventId);
+                return;
             }
-        }
-        finally
-        {
-            _queueConsumerService.MessageReceived -= _eventHandler;
+
+            await unitOfWork.SaveAsync(_cancellationToken);
+            _logger.LogInformation(eventId, "Detection saved To DB");
             
+            var pushResult = await objectDetectionService.PushDetectionToQueue(_commandData.DetectionQueue,
+                detectionResult.Value, _commandData.RemoteStorageContainer, remoteStorageFilePath,
+                _cancellationToken);
+            if (pushResult.HasError)
+                _logger.ProcessApplicationErrors(pushResult.DomainErrors, eventId);
+            
+            _logger.LogInformation(eventId, $"Detection push to queue {_commandData.DetectionQueue}");
+        }
+        
+        catch (Exception e)
+        {
+            _logger.LogError(eventId, e, "Unexpected Error");
+            throw;
         }
         
     }

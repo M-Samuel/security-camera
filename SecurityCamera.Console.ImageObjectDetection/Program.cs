@@ -33,7 +33,7 @@ static void RegisterDomainServices(HostApplicationBuilder hostApplicationBuilder
 
 static void RegisterApplication(HostApplicationBuilder hostApplicationBuilder)
 {
-    hostApplicationBuilder.Services.AddScoped<ObjectDetectionCommand>();
+    hostApplicationBuilder.Services.AddSingleton<ObjectDetectionCommand>();
 }
 
 static void RegisterInfrastructure(HostApplicationBuilder hostApplicationBuilder)
@@ -65,5 +65,4 @@ static void RegisterCrossCuttingConcerns(HostApplicationBuilder hostApplicationB
     hostApplicationBuilder.Logging.ClearProviders();
     hostApplicationBuilder.Logging.AddConsole();
     hostApplicationBuilder.Logging.AddDebug();
-    hostApplicationBuilder.Services.AddSingleton<IServiceProvider>(sp => sp);
 }

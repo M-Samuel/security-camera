@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging;
 using Microsoft.ML;
@@ -22,11 +23,11 @@ public class OnnxAiService : IAiDetectionService
         _selectedLabels = ConvertEnumToStringArray<DetectionType>().ToArray();
     }
 
-    private readonly string _modelFilePath = "TinyYolo2_model.onnx";
+    private readonly string _modelFilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty, "TinyYolo2_model.onnx") ;
     private readonly string[] _selectedLabels;
     private readonly ILogger<OnnxAiService> _logger;
 
-    public async IAsyncEnumerable<DetectionEvent> AnalyseImage(ImageRecordedEvent imageRecordedEvent, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public IEnumerable<DetectionEvent> AnalyseImage(ImageRecordedEvent imageRecordedEvent, CancellationToken cancellationToken)
     {
         IList<YoloBoundingBox>[] detections = DetectionAction(imageRecordedEvent.ImageBytes, imageRecordedEvent.ImageName);
         if (detections.Length == 0)
@@ -37,6 +38,7 @@ public class OnnxAiService : IAiDetectionService
             foreach (var detectionBox in image)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                
                 string? detectionType = _selectedLabels.FirstOrDefault(dt =>
                     dt.ToLowerInvariant() == detectionBox.Label.ToLowerInvariant());
                 
@@ -58,8 +60,6 @@ public class OnnxAiService : IAiDetectionService
                 yield return detectionEvent;
             }
         }
-
-        await Task.CompletedTask;
     }
     
 

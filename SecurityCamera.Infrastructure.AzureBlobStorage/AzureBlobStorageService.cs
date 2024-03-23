@@ -316,12 +316,29 @@ public class AzureBlobStorageService : IRemoteStorageService
             
             BlobClient blobClient = containerClient.GetBlobClient(filePath);
 
+            var transferOptions = new StorageTransferOptions
+            {
+                // Set the maximum number of parallel transfer workers
+                MaximumConcurrency = 2,
+
+                // Set the initial transfer length to 1 MiB
+                InitialTransferSize = 1 * 1024 * 1024,
+
+                // Set the maximum length of a transfer to 1 MiB
+                MaximumTransferSize = 1 * 1024 * 1024
+            };
+
+            BlobDownloadToOptions downloadOptions = new BlobDownloadToOptions()
+            {
+                TransferOptions = transferOptions
+            };
+
             using MemoryStream memoryStream = new MemoryStream();
 
-            var response = await blobClient.DownloadToAsync(memoryStream, cancellationToken: cancellationToken);
+            var response = await blobClient.DownloadToAsync(memoryStream, downloadOptions, cancellationToken: cancellationToken);
             if (response == null)
                 throw new InvalidOperationException($"Unable to download file to {filePath}");
-            if (!response.IsError)
+            if (response.IsError)
                 throw new InvalidOperationException($"Unable to download file to {filePath}");
 
             return new RemoteStorageFile()
@@ -342,7 +359,7 @@ public class AzureBlobStorageService : IRemoteStorageService
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "UploadRemoteStorageFile failed");
+            _logger.LogError(e, "DownloadRemoteStorageFile failed");
             throw;
         }
     }

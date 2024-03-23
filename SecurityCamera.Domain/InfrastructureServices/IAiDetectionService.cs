@@ -5,5 +5,5 @@ namespace SecurityCamera.Domain.InfrastructureServices;
 
 public interface IAiDetectionService 
 {
-    IAsyncEnumerable<DetectionEvent> AnalyseImage(ImageRecordedEvent imageRecordedEvent, CancellationToken cancellationToken);
+    IEnumerable<DetectionEvent> AnalyseImage(ImageRecordedEvent imageRecordedEvent, CancellationToken cancellationToken);
 }

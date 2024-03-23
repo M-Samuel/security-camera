@@ -4,7 +4,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SecurityCamera.Domain.ImageRecorderDomain;
 using SecurityCamera.Domain.ObjectDetectionDomain;
-using SecurityCamera.SharedKernel;
 
 namespace SecurityCamera.Infrastructure.AzureServiceBus;
 
@@ -21,8 +20,6 @@ IQueuePublisherService<DetectionMessage>
 
     private Task? _imageRecorderConsumerTask;
     private Task? _detectionConsumerTask;
-    // public event EventHandler<ImageRecorderOnImagePushMessage> MessageReceived;
-    // public event EventHandler<DetectionMessage> MessageReceived;
 
     public AzureServiceBusService(IConfiguration configuration, ILogger<AzureServiceBusService> logger)
     {
@@ -64,7 +61,7 @@ IQueuePublisherService<DetectionMessage>
         
         if (_imageRecorderConsumerTask == null)
         {
-            var processor = _client.CreateProcessor(queueName, new ServiceBusProcessorOptions());
+            ServiceBusProcessor processor = _client.CreateProcessor(queueName, new ServiceBusProcessorOptions());
             _imageRecorderConsumerTask = Task.Factory.StartNew(async () =>
             {
                 // add handler to process messages
@@ -73,8 +70,7 @@ IQueuePublisherService<DetectionMessage>
                     ServiceBusReceivedMessage message = args.Message;
                     _logger.LogInformation($"Received message: {message.Body}");
                     ImageRecorderMessageReceived?.Invoke(this, message.Body.ToObjectFromJson<ImageRecorderOnImagePushMessage>());
-                    //await args.CompleteMessageAsync(args.Message, cancellationToken);
-                    await Task.CompletedTask;
+                    await args.CompleteMessageAsync(args.Message, cancellationToken);
                 };
 
                 // add handler to process any errors

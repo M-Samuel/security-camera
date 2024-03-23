@@ -106,7 +106,7 @@ public class ImageRecorderService : IImageRecorderService
             return result;
 
         await _remoteStorageService.CreateRemoteStorageContainer(remoteStorageContainer, cancellationToken);
-        await _remoteStorageService.UploadRemoteStorageFile(remoteStorageContainer, remoteStorageFilePath, imageRecordedEvent.ImageBytes, cancellationToken);
+        await _remoteStorageService.UploadRemoteStorageLargeFile(remoteStorageContainer, remoteStorageFilePath, new MemoryStream(imageRecordedEvent.ImageBytes), cancellationToken);
 
         return result;
     }

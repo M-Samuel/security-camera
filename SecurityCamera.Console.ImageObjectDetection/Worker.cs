@@ -7,14 +7,14 @@ public class Worker : BackgroundService
 {
     private readonly ILogger<Worker> _logger;
     private readonly IConfiguration _configuration;
-    private readonly IServiceProvider _serviceProvider;
+    private readonly ObjectDetectionCommand _objectDetectionCommand;
     private readonly IServiceScopeFactory _serviceScopeFactory;
 
-    public Worker(ILogger<Worker> logger, IConfiguration configuration, IServiceProvider serviceProvider, IServiceScopeFactory serviceScopeFactory)
+    public Worker(ILogger<Worker> logger, IConfiguration configuration, ObjectDetectionCommand objectDetectionCommand, IServiceScopeFactory serviceScopeFactory)
     {
         _logger = logger;
         _configuration = configuration;
-        _serviceProvider = serviceProvider;
+        _objectDetectionCommand = objectDetectionCommand;
         _serviceScopeFactory = serviceScopeFactory;
     }
 
@@ -29,27 +29,14 @@ public class Worker : BackgroundService
             ImageQueue = _configuration[nameof(Args.ServiceBusQueueImageRecords)] ?? string.Empty,
             DetectionQueue = _configuration[nameof(Args.ServiceBusQueueDetections)] ?? string.Empty,
         };
-
-        while (true)
+        
+        EventId eventId = new EventId((int)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds, Guid.NewGuid().ToString());
+        stoppingToken.ThrowIfCancellationRequested();
+        await _objectDetectionCommand.ProcessCommandAsync(commandData, eventId, stoppingToken);
+        while (!stoppingToken.IsCancellationRequested)
         {
-            using IServiceScope scope = _serviceScopeFactory.CreateScope();
-            ObjectDetectionCommand? objectDetectionCommand = scope.ServiceProvider.GetService<ObjectDetectionCommand>();
-            if (objectDetectionCommand == null)
-                throw new InvalidOperationException($"{nameof(ObjectDetectionCommand)} service not registered");
-            
-            EventId eventId = new EventId(new Random().Next(), Guid.NewGuid().ToString());
-            stoppingToken.ThrowIfCancellationRequested();
-            try
-            {
-                await objectDetectionCommand.ProcessCommandAsync(commandData, eventId, stoppingToken);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(eventId, e, "Fatal error...");
-                throw;
-            }
-
-            await Task.Delay(3000, stoppingToken);
+            //Waiting for cancellation
+            await Task.Delay(5000, stoppingToken);
         }
     }
 }

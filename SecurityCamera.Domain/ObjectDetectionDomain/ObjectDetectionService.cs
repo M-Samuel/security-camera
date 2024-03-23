@@ -45,7 +45,7 @@ public class ObjectDetectionService : IObjectDetectionService
         if (result.HasError)
             return result;
         
-        DetectionEvent? detectionEvent = await _aiDetectionService.AnalyseImage(imageRecordedEvent, cancellationToken).FirstOrDefaultAsync(cancellationToken);
+        DetectionEvent? detectionEvent = _aiDetectionService.AnalyseImage(imageRecordedEvent, cancellationToken).FirstOrDefault();
         result.UpdateValueIfNoError(detectionEvent);
     
         return result;
