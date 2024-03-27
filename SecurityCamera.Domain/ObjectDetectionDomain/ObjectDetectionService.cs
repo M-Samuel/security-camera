@@ -48,7 +48,7 @@ public class ObjectDetectionService : IObjectDetectionService
         DetectionEvent? detectionEvent = _aiDetectionService.AnalyseImage(imageRecordedEvent, cancellationToken).FirstOrDefault();
         result.UpdateValueIfNoError(detectionEvent);
     
-        return await Task.FromResult(result);
+        return result;
     }
     
     
