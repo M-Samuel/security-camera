@@ -1,4 +1,4 @@
-name: (ImageRecorder) Docker Image Build Only With Cache
+name: (ImageRecorder) Build Only
 
 on:
   pull_request:
@@ -28,7 +28,7 @@ jobs:
       uses: docker/build-push-action@v5.1.0
       with:
         context: .
-        file: ./SecurityCamera.Console.ImageRecorder/dockerfile
+        file: ./src/SecurityCamera.Console.ImageRecorder/dockerfile
         platforms: linux/amd64,linux/arm64
         cache-from: type=gha
         cache-to: type=gha,mode=max

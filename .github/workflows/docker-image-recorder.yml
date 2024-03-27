@@ -1,4 +1,4 @@
-name: Docker Image CI For Image Recoder push on Docker hub (Offical)
+name: (ImageRecorder) Build and push
 
 on:
   push:
@@ -45,7 +45,7 @@ jobs:
       uses: docker/build-push-action@v5.1.0
       with:
         context: .
-        file: ./SecurityCamera.Console.ImageRecorder/dockerfile
+        file: ./src/SecurityCamera.Console.ImageRecorder/dockerfile
         platforms: linux/amd64,linux/arm64
         cache-from: type=gha
         cache-to: type=gha,mode=max
