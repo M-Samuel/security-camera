@@ -25,8 +25,6 @@ COPY ../SecurityCamera.Console.ImageRecorder/DockerAssets/record.sh record.sh
 RUN chmod +x record.sh
 COPY ../SecurityCamera.Console.ImageRecorder/DockerAssets/push.sh push.sh
 RUN chmod +x push.sh
-COPY ../SecurityCamera.Console.ImageRecorder/DockerAssets/imageResize.sh imageResize.sh
-RUN chmod +x imageResize.sh
 
 WORKDIR /images
 # Set the command to run when the container starts.
