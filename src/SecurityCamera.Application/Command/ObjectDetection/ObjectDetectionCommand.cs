@@ -50,18 +50,20 @@ public class ObjectDetectionCommand : ICommand<ObjectDetectionCommandData, Objec
 
     public void Handle(object? sender, ImageRecorderOnImagePushMessage queueMessage)
     {
-        Task.Factory.StartNew(async () => await ProcessMessage(queueMessage), _cancellationToken);
+        Task.Run(() => ProcessMessageAsync(queueMessage), _cancellationToken).GetAwaiter().GetResult();
     }
 
-    private async Task ProcessMessage(ImageRecorderOnImagePushMessage queueMessage)
+    private async Task ProcessMessageAsync(ImageRecorderOnImagePushMessage queueMessage)
     { 
+        GC.Collect();
         EventId eventId = new EventId((int)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds, Guid.NewGuid().ToString());
         try
         {
             using var scope = _serviceScopeFactory.CreateScope();
-            IObjectDetectionService objectDetectionService = scope.ServiceProvider.GetRequiredService<IObjectDetectionService>();
+            IObjectDetectionService objectDetectionService =
+                scope.ServiceProvider.GetRequiredService<IObjectDetectionService>();
             IUnitOfWork unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-            
+
             if (_commandData == null)
                 return;
             if (string.IsNullOrWhiteSpace(queueMessage.RemoteStorageFilePath))
@@ -111,20 +113,24 @@ public class ObjectDetectionCommand : ICommand<ObjectDetectionCommandData, Objec
 
             await unitOfWork.SaveAsync(_cancellationToken);
             _logger.LogInformation(eventId, "Detection saved To DB");
-            
+
             var pushResult = await objectDetectionService.PushDetectionToQueue(_commandData.DetectionQueue,
                 detectionResult.Value, _commandData.RemoteStorageContainer, remoteStorageFilePath,
                 _cancellationToken);
             if (pushResult.HasError)
                 _logger.ProcessApplicationErrors(pushResult.DomainErrors, eventId);
-            
+
             _logger.LogInformation(eventId, $"Detection push to queue {_commandData.DetectionQueue}");
         }
-        
+
         catch (Exception e)
         {
             _logger.LogError(eventId, e, "Unexpected Error");
             throw;
+        }
+        finally
+        {
+            GC.Collect();
         }
         
     }
