@@ -61,21 +61,26 @@ IQueuePublisherService<DetectionMessage>
         
         if (_imageRecorderConsumerTask == null)
         {
-            ServiceBusProcessor processor = _client.CreateProcessor(queueName, new ServiceBusProcessorOptions());
+            ServiceBusProcessorOptions serviceBusProcessorOptions = new ServiceBusProcessorOptions()
+            {
+                MaxConcurrentCalls = 1,
+                AutoCompleteMessages = false,
+            };
+            ServiceBusProcessor processor = _client.CreateProcessor(queueName, serviceBusProcessorOptions);
+            // add handler to process messages
+            processor.ProcessMessageAsync += async (args) =>
+            {
+                ServiceBusReceivedMessage message = args.Message;
+                _logger.LogInformation($"Received message: {message.Body}");
+                ImageRecorderMessageReceived?.Invoke(this, message.Body.ToObjectFromJson<ImageRecorderOnImagePushMessage>());
+                await args.CompleteMessageAsync(args.Message, cancellationToken);
+            };
+
+            // add handler to process any errors
+            processor.ProcessErrorAsync += ErrorHandler;
+            
             _imageRecorderConsumerTask = Task.Factory.StartNew(async () =>
             {
-                // add handler to process messages
-                processor.ProcessMessageAsync += async (args) =>
-                {
-                    ServiceBusReceivedMessage message = args.Message;
-                    _logger.LogInformation($"Received message: {message.Body}");
-                    ImageRecorderMessageReceived?.Invoke(this, message.Body.ToObjectFromJson<ImageRecorderOnImagePushMessage>());
-                    await args.CompleteMessageAsync(args.Message, cancellationToken);
-                };
-
-                // add handler to process any errors
-                processor.ProcessErrorAsync += ErrorHandler;
-
                 // start processing 
                 await processor.StartProcessingAsync(cancellationToken);
             }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
