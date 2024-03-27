@@ -5,7 +5,7 @@ namespace SecurityCamera.Domain.ImageRecorderDomain.Events;
 public record ImageRecordedEvent(
     DateTime OccurrenceDateTime, 
     string CameraName,
-    string TempLocalImagePath, 
+    byte[] ImageBytes, 
     string ImageName, 
     DateTime ImageCreatedDateTime
     ) : IDomainEvent;

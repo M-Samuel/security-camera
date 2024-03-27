@@ -29,7 +29,7 @@ public class OnnxAiService : IAiDetectionService
 
     public IEnumerable<DetectionEvent> AnalyseImage(ImageRecordedEvent imageRecordedEvent, CancellationToken cancellationToken)
     {
-        IList<YoloBoundingBox>[] detections = DetectionAction(imageRecordedEvent.TempLocalImagePath, imageRecordedEvent.ImageName);
+        IList<YoloBoundingBox>[] detections = DetectionAction(imageRecordedEvent.ImageBytes, imageRecordedEvent.ImageName);
         if (detections.Length == 0)
             yield break;
 
@@ -52,7 +52,7 @@ public class OnnxAiService : IAiDetectionService
                 DetectionEvent detectionEvent = new(
                     CameraName: imageRecordedEvent.CameraName,
                     OccurrenceDateTime: DateTime.UtcNow, 
-                    TempLocalImagePath: imageRecordedEvent.TempLocalImagePath,
+                    ImageBytes: imageRecordedEvent.ImageBytes,
                     ImageName: imageRecordedEvent.ImageName,
                     ImageCreatedDateTime: imageRecordedEvent.ImageCreatedDateTime,
                     DetectionType: ConvertStringToEnum<DetectionType>(detectionType));
@@ -118,7 +118,7 @@ public class OnnxAiService : IAiDetectionService
         image.Save(Path.Combine(outputImageLocation, imageName));
     }
 
-    private IList<YoloBoundingBox>[] DetectionAction(string imageLocalFilePath, string imageName)
+    private IList<YoloBoundingBox>[] DetectionAction(byte[] imageBytes, string imageName)
     {
         // Initialize MLContext
         MLContext mlContext = new MLContext();
@@ -130,7 +130,7 @@ public class OnnxAiService : IAiDetectionService
         {
             // Load Data
             IEnumerable<ImageNetData> imageArray =
-                ImageNetData.ReadFromByteArray(imageLocalFilePath, imageName).ToArray();
+                ImageNetData.ReadFromByteArray(imagesFolder, imageBytes, imageName).ToArray();
             IDataView imageDataView = mlContext.Data.LoadFromEnumerable(imageArray);
 
             // Create instance of model scorer
