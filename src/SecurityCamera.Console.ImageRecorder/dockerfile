@@ -6,7 +6,7 @@ ARG TARGETARCH
 WORKDIR /src
 
 # Copy the rest of the working directory contents.
-COPY ../ ./
+COPY ../../ ./
 
 # Build the app.
 WORKDIR /src/SecurityCamera.Console.ImageRecorder
