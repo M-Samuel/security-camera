@@ -143,21 +143,26 @@ IQueuePublisherService<DetectionMessage>
         
         if (_detectionConsumerTask == null)
         {
-            var processor = _client.CreateProcessor(queueName, new ServiceBusProcessorOptions());
+            ServiceBusProcessorOptions serviceBusProcessorOptions = new ServiceBusProcessorOptions()
+            {
+                MaxConcurrentCalls = 1,
+                AutoCompleteMessages = false,
+            };
+            ServiceBusProcessor processor = _client.CreateProcessor(queueName, serviceBusProcessorOptions);
+            // add handler to process messages
+            processor.ProcessMessageAsync += async (args) =>
+            {
+                ServiceBusReceivedMessage message = args.Message;
+                _logger.LogInformation($"Received message: {message.Body}");
+                DetectionMessageReceived?.Invoke(this, message.Body.ToObjectFromJson<DetectionMessage>());
+                await args.CompleteMessageAsync(args.Message, cancellationToken);
+            };
+            
+            // add handler to process any errors
+            processor.ProcessErrorAsync += ErrorHandler;
+            
             _detectionConsumerTask = Task.Factory.StartNew(async () =>
             {
-                // add handler to process messages
-                processor.ProcessMessageAsync += async (args) =>
-                {
-                    ServiceBusReceivedMessage message = args.Message;
-                    _logger.LogInformation($"Received message: {message.Body}");
-                    DetectionMessageReceived?.Invoke(this, message.Body.ToObjectFromJson<DetectionMessage>());
-                    await args.CompleteMessageAsync(args.Message, cancellationToken);
-                };
-
-                // add handler to process any errors
-                processor.ProcessErrorAsync += ErrorHandler;
-
                 // start processing 
                 await processor.StartProcessingAsync(cancellationToken);
             }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
