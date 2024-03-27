@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>dotnet-SecurityCamera.Console.ImageObjectDetection-69FE5B9A-9507-4136-90B3-9E0C3FB88A07</UserSecretsId>
+    </PropertyGroup>
+
+     <ItemGroup>
+        <ProjectReference Include="..\SecurityCamera.Application\SecurityCamera.Application.csproj" />
+        <ProjectReference Include="..\SecurityCamera.Domain\SecurityCamera.Domain.csproj" />
+        <ProjectReference Include="..\SecurityCamera.Infrastructure.Database\SecurityCamera.Infrastructure.Database.csproj" />
+        <ProjectReference Include="..\SecurityCamera.Infrastructure.OnnxAi\SecurityCamera.Infrastructure.OnnxAi.csproj" />
+        <ProjectReference Include="..\SecurityCamera.Infrastructure.RabbitMq\SecurityCamera.Infrastructure.RabbitMq.csproj" />
+        <ProjectReference Include="..\SecurityCamera.SharedKernel\SecurityCamera.SharedKernel.csproj" />
+        <ProjectReference Include="..\SecurityCamera.Infrastructure.AzureServiceBus\SecurityCamera.Infrastructure.AzureServiceBus.csproj" />
+        <ProjectReference Include="..\SecurityCamera.Infrastructure.AzureBlobStorage\SecurityCamera.Infrastructure.AzureBlobStorage.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0"/>
+    </ItemGroup>
+</Project>

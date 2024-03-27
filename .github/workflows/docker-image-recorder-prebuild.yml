@@ -1,4 +1,4 @@
-name: Docker Image CI For Image Recoder PREBUILD push on Docker hub (Offical)
+name: (DOTNET + FFMPEG PREBUILD)
 
 on:
   workflow_dispatch:
@@ -43,7 +43,7 @@ jobs:
       uses: docker/build-push-action@v5.1.0
       with:
         context: .
-        file: ./SecurityCamera.Console.ImageRecorder/dockerfile-prebuild
+        file: ./src/SecurityCamera.Console.ImageRecorder/dockerfile-prebuild
         platforms: linux/amd64,linux/arm64
         cache-from: type=gha
         cache-to: type=gha,mode=max

@@ -1,4 +1,4 @@
-name: Docker Image CI For Recoder PREBUILD on Docker hub (Offical)
+name: (VideoRecorder Python Aws FFMPEG Prebuild)
 
 on:
   workflow_dispatch:
@@ -42,8 +42,8 @@ jobs:
       # uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56 
       uses: docker/build-push-action@v5.1.0
       with:
-        context: ./Recorder
-        file: ./Recorder/dockerfile-prebuild
+        context: ./src/Recorder
+        file: ./src/Recorder/dockerfile-prebuild
         platforms: linux/amd64,linux/arm64
         cache-from: type=gha
         cache-to: type=gha,mode=max

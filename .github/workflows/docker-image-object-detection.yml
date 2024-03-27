@@ -1,4 +1,4 @@
-name: (ImageRecorder) Build and push
+name: (ImageObjectDetection) Build and push
 
 on:
   push:
@@ -45,14 +45,14 @@ jobs:
       uses: docker/build-push-action@v5.1.0
       with:
         context: ./src
-        file: ./src/SecurityCamera.Console.ImageRecorder/dockerfile
+        file: ./src/SecurityCamera.Console.ImageObjectDetection/dockerfile
         platforms: linux/amd64,linux/arm64
         cache-from: type=gha
         cache-to: type=gha,mode=max
         push: true
         tags: |
-          ${{ secrets.DOCKER_USERNAME }}/security-camera-image-recorder:${{github.ref_name}}
-          ${{ secrets.DOCKER_USERNAME }}/security-camera-image-recorder:latest
+          ${{ secrets.DOCKER_USERNAME }}/security-camera-image-object-detection:${{github.ref_name}}
+          ${{ secrets.DOCKER_USERNAME }}/security-camera-image-object-detection:latest
           
     
           

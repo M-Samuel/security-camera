@@ -1,0 +1,27 @@
+# Use the official image as a parent image.
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim AS build-env
+ARG TARGETARCH
+
+# Set the working directory.
+WORKDIR /src
+
+# Copy the rest of the working directory contents.
+COPY ../ ./
+
+# Build the app.
+WORKDIR /src/SecurityCamera.Console.ImageObjectDetection
+RUN dotnet publish -a $TARGETARCH -c Release --self-contained false -o /build
+
+# Build runtime image.
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim
+
+WORKDIR /app
+COPY --from=build-env /build .
+
+WORKDIR /scripts
+COPY ../SecurityCamera.Console.ImageObjectDetection/DockerAssets/Run.sh Run.sh
+RUN chmod +x Run.sh
+
+WORKDIR /images
+# Set the command to run when the container starts.
+ENTRYPOINT ["/scripts/Run.sh" ]

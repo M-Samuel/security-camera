@@ -1,4 +1,4 @@
-name: (ImageRecorder) Build Only
+name: (ImageObjectDetection) Build Only
 
 on:
   pull_request:
@@ -28,12 +28,12 @@ jobs:
       uses: docker/build-push-action@v5.1.0
       with:
         context: ./src
-        file: ./src/SecurityCamera.Console.ImageRecorder/dockerfile
+        file: ./src/SecurityCamera.Console.ImageObjectDetection/dockerfile
         platforms: linux/amd64,linux/arm64
         cache-from: type=gha
         cache-to: type=gha,mode=max
         push: false
-        tags: ${{ secrets.DOCKER_USERNAME }}/security-camera-image-recorder:latest
+        tags: ${{ secrets.DOCKER_USERNAME }}/security-camera-image-object-detection:latest
           
     
           
