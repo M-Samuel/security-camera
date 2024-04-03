@@ -40,7 +40,8 @@ public class ImageRecorderCommand : ICommand<ImageRecorderCommandData, ImageReco
         
         foreach (ImageRecordedEvent imageRecordedEvent in imageRecordEvents)
         {
-            string remoteStorageFilePath = $"{commandData.RemoteStorageFileDirectory}/{imageRecordedEvent.ImageName}";
+            string newImageName = $"{imageRecordedEvent.ImageCreatedDateTime:yyyyMMddHHmmss}_image.png";
+            string remoteStorageFilePath = $"{commandData.RemoteStorageFileDirectory}/{newImageName}";
             var saveToRemoteResult = await _imageRecorderService.SaveImageToRemoteStorage(imageRecordedEvent, commandData.RemoteStorageContainer, remoteStorageFilePath, cancellationToken);
             if(saveToRemoteResult.HasError){
                 _logger.ProcessApplicationErrors(saveToRemoteResult.DomainErrors, eventId);
