@@ -46,8 +46,8 @@ public class VideoRecorderCommand : ICommand<VideoRecorderCommandData, VideoReco
 
         var uploadVideoResult = await _videoRecorderService.UploadToRemoteStorage(
             renamedVideos,
-            commandData.RemoteContainer,
-            commandData.RemoteDirectory,
+            commandData.RemoteStorageContainer,
+            commandData.RemoteStorageVideoDirectory,
             commandData.DeleteAfterUpload,
             cancellationToken
         );
@@ -57,7 +57,7 @@ public class VideoRecorderCommand : ICommand<VideoRecorderCommandData, VideoReco
         
         string[] uploadedVideos = uploadVideoResult.Value ?? [];
         _logger.LogInformation(eventId, $"{uploadedVideos.Length} uploaded");
-        Array.ForEach(uploadedVideos, (videoPath) => _logger.LogInformation(eventId, $"Container {commandData.RemoteContainer}, Video uploaded to: {videoPath}"));
+        Array.ForEach(uploadedVideos, (videoPath) => _logger.LogInformation(eventId, $"Container {commandData.RemoteStorageContainer}, Video uploaded to: {videoPath}"));
         
         return new VideoRecorderCommandResult();
     }
@@ -69,8 +69,8 @@ public class VideoRecorderCommandResult
 
 public class VideoRecorderCommandData
 {
-    public string LocalVideoDirectory { get; set; }
-    public string RemoteContainer { get; set; }
-    public string RemoteDirectory { get; set; }
+    public required string LocalVideoDirectory { get; set; }
+    public required string RemoteStorageContainer { get; set; }
+    public required string RemoteStorageVideoDirectory { get; set; }
     public bool DeleteAfterUpload { get; set; }
 }

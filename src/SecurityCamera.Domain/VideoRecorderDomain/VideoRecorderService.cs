@@ -53,7 +53,7 @@ public class VideoRecorderService : IVideoRecorderService
         foreach (string videoPath in videoPaths)
         {
             FileInfo fileInfo = new FileInfo(videoPath);
-            string newVideoName = $"{fileInfo.CreationTimeUtc:yyyyMMddHHmmssfff}_video.mp4";
+            string newVideoName = $"{fileInfo.CreationTimeUtc:yyyyMMddHHmmss}_video.mp4";
 
             string videoDirectory = Path.GetDirectoryName(videoPath) ?? string.Empty;
             if(string.IsNullOrWhiteSpace(videoDirectory))
@@ -78,12 +78,19 @@ public class VideoRecorderService : IVideoRecorderService
         {
             try
             {
+                _logger.LogInformation($"Stating Video {videoPath} uploading...");
                 string remoteVideoPath = Path.Combine(remoteDirectory, Path.GetFileName(videoPath));
                 await _remoteStorageService.UploadRemoteStorageLargeFile(remoteContainer, remoteVideoPath,
                     File.OpenRead(videoPath), cancellationToken);
                 remoteVideoPaths.Add(remoteVideoPath);
-                if(deleteAfterUpload)
+                _logger.LogInformation($"Video {videoPath} uploaded to {remoteVideoPath}");
+
+                if (deleteAfterUpload)
+                {
+                    _logger.LogInformation($"Video {videoPath} deleted");
                     File.Delete(videoPath);
+                }
+                    
             }
             catch (Exception e)
             {

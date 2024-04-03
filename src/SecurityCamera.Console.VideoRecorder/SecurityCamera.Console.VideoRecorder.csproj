@@ -12,6 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\SecurityCamera.Application\SecurityCamera.Application.csproj" />
       <ProjectReference Include="..\SecurityCamera.Domain\SecurityCamera.Domain.csproj" />
       <ProjectReference Include="..\SecurityCamera.Infrastructure.AzureBlobStorage\SecurityCamera.Infrastructure.AzureBlobStorage.csproj" />
     </ItemGroup>
