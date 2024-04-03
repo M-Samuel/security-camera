@@ -26,5 +26,6 @@ RUN chmod +x record.sh
 COPY ../SecurityCamera.Console.VideoRecorder/DockerAssets/push.sh push.sh
 RUN chmod +x push.sh
 
+WORKDIR /recordings
 # Set the command to run when the container starts.
 ENTRYPOINT ["/scripts/Run.sh" ]
