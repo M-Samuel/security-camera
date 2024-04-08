@@ -10,10 +10,18 @@ COPY ../ ./
 
 # Build the app.
 WORKDIR /src/SecurityCamera.Console.ImageObjectDetection
-RUN dotnet publish -a $TARGETARCH -c Release --self-contained false -o /build
+RUN dotnet publish -a $TARGETARCH -c Release --self-contained true -o /build
 
 # Build runtime image.
-FROM smb5d/security-camera-image-recorder-prebuild:latest
+FROM python:3.11.9-slim-bookworm
+
+RUN apt update 
+
+RUN apt install gcc libgl1 libglib2.0-0 libsm6 libxrender1 libxext6 curl bash -y
+
+RUN pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+RUN pip3 install ultralytics
 
 WORKDIR /app
 COPY --from=build-env /build .
