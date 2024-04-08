@@ -4,6 +4,7 @@ using SecurityCamera.Domain.ImageRecorderDomain;
 using SecurityCamera.Domain.ImageRecorderDomain.Events;
 using SecurityCamera.Domain.InfrastructureServices;
 using SecurityCamera.Domain.ObjectDetectionDomain;
+using SecurityCamera.Domain.ObjectDetectionDomain.Events;
 using SecurityCamera.SharedKernel;
 
 namespace SecurityCamera.Application.Command.ObjectDetection;
@@ -83,10 +84,10 @@ public class ObjectDetectionCommand : ICommand<ObjectDetectionCommandData, Objec
 
             ImageRecordedEvent imageRecordedEvent = new(
                 OccurrenceDateTime: DateTime.Now,
-                CameraName: queueMessage.CameraName ?? "",
+                CameraName: queueMessage.CameraName ?? string.Empty,
                 ImageBytes: remoteStorageFile.FileContent,
                 ImageCreatedDateTime: queueMessage.ImageCreatedDateTime,
-                ImageName: queueMessage.ImageName ?? ""
+                ImageName: queueMessage.ImageName ?? string.Empty
             );
 
             var detectionResult =
@@ -103,24 +104,28 @@ public class ObjectDetectionCommand : ICommand<ObjectDetectionCommandData, Objec
                 return;
             }
 
-            var saveResult = await objectDetectionService.SaveDetectionToDb(detectionResult.Value,
-                _commandData.RemoteStorageContainer, remoteStorageFilePath, _cancellationToken);
-            if (saveResult.HasError)
+            DetectionEvent[] detectionEvents = detectionResult.Value;
+            foreach(DetectionEvent detectionEvent in detectionEvents)
             {
-                _logger.ProcessApplicationErrors(saveResult.DomainErrors, eventId);
-                return;
+                var saveResult = await objectDetectionService.SaveDetectionToDb(detectionEvent,
+                _commandData.RemoteStorageContainer, remoteStorageFilePath, _cancellationToken);
+                if (saveResult.HasError)
+                {
+                    _logger.ProcessApplicationErrors(saveResult.DomainErrors, eventId);
+                    return;
+                }
+                
+                _logger.LogInformation(eventId, "Detection saved To DB");
+
+                var pushResult = await objectDetectionService.PushDetectionToQueue(_commandData.DetectionQueue,
+                    detectionEvent, _commandData.RemoteStorageContainer, remoteStorageFilePath,
+                    _cancellationToken);
+                if (pushResult.HasError)
+                    _logger.ProcessApplicationErrors(pushResult.DomainErrors, eventId);
+
+                _logger.LogInformation(eventId, $"Detection push to queue {_commandData.DetectionQueue}");
             }
-
             await unitOfWork.SaveAsync(_cancellationToken);
-            _logger.LogInformation(eventId, "Detection saved To DB");
-
-            var pushResult = await objectDetectionService.PushDetectionToQueue(_commandData.DetectionQueue,
-                detectionResult.Value, _commandData.RemoteStorageContainer, remoteStorageFilePath,
-                _cancellationToken);
-            if (pushResult.HasError)
-                _logger.ProcessApplicationErrors(pushResult.DomainErrors, eventId);
-
-            _logger.LogInformation(eventId, $"Detection push to queue {_commandData.DetectionQueue}");
         }
 
         catch (Exception e)

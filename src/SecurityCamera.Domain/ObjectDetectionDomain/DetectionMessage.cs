@@ -10,5 +10,5 @@ public class DetectionMessage : QueueMessage
     public string? CameraName { get; set; }
     public string? ImageName { get; set; }
     public DateTime ImageCreatedDateTime { get; set; }
-    public required DetectionType DetectionType { get; set; }
+    public required string DetectionData { get; set; }
 }

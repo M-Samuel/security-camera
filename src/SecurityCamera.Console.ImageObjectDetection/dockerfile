@@ -15,6 +15,14 @@ RUN dotnet publish -a $TARGETARCH -c Release --self-contained false -o /build
 # Build runtime image.
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim
 
+RUN apt update
+
+RUN apt install gcc python3-pip python3-dev libgl1 libglib2.0-0 libsm6 libxrender1 libxext6 -y
+
+RUN pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu --break-system-packages
+
+RUN pip3 install ultralytics --break-system-packages
+
 WORKDIR /app
 COPY --from=build-env /build .
 

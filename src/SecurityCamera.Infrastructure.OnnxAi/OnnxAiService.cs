@@ -27,12 +27,13 @@ public class OnnxAiService : IAiDetectionService
     private readonly string[] _selectedLabels;
     private readonly ILogger<OnnxAiService> _logger;
 
-    public IEnumerable<DetectionEvent> AnalyseImage(ImageRecordedEvent imageRecordedEvent, CancellationToken cancellationToken)
+    public async Task<DetectionEvent[]> AnalyseImage(ImageRecordedEvent imageRecordedEvent, CancellationToken cancellationToken)
     {
         IList<YoloBoundingBox>[] detections = DetectionAction(imageRecordedEvent.ImageBytes, imageRecordedEvent.ImageName);
         if (detections.Length == 0)
-            yield break;
+            return Array.Empty<DetectionEvent>();
 
+        List<DetectionEvent> detectionEvents = new List<DetectionEvent>();
         foreach (var image in detections)
         {
             foreach (var detectionBox in image)
@@ -55,11 +56,13 @@ public class OnnxAiService : IAiDetectionService
                     ImageBytes: imageRecordedEvent.ImageBytes,
                     ImageName: imageRecordedEvent.ImageName,
                     ImageCreatedDateTime: imageRecordedEvent.ImageCreatedDateTime,
-                    DetectionType: ConvertStringToEnum<DetectionType>(detectionType));
-                
-                yield return detectionEvent;
+                    DetectionData: detectionType
+                );
+                detectionEvents.Add(detectionEvent);
             }
         }
+
+        return await Task.FromResult(detectionEvents.ToArray());
     }
     
 

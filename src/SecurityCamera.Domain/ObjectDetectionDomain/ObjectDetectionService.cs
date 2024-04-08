@@ -28,9 +28,9 @@ public class ObjectDetectionService : IObjectDetectionService
     }
 
     
-    public async Task<Result<DetectionEvent?>> LaunchDetectionAlgorithm(ImageRecordedEvent imageRecordedEvent, CancellationToken cancellationToken = default)
+    public async Task<Result<DetectionEvent[]?>> LaunchDetectionAlgorithm(ImageRecordedEvent imageRecordedEvent, CancellationToken cancellationToken = default)
     {
-        Result<DetectionEvent?> result = new Result<DetectionEvent?>(null);
+        Result<DetectionEvent[]?> result = new Result<DetectionEvent[]?>(null);
         result
             .AddErrorIf(
                 () => imageRecordedEvent.ImageBytes.Length == 0, 
@@ -45,8 +45,8 @@ public class ObjectDetectionService : IObjectDetectionService
         if (result.HasError)
             return result;
         
-        DetectionEvent? detectionEvent = _aiDetectionService.AnalyseImage(imageRecordedEvent, cancellationToken).FirstOrDefault();
-        result.UpdateValueIfNoError(detectionEvent);
+        DetectionEvent[]? detectionEvents = await _aiDetectionService.AnalyseImage(imageRecordedEvent, cancellationToken);
+        result.UpdateValueIfNoError(detectionEvents);
     
         return await Task.FromResult(result);
     }
@@ -74,7 +74,7 @@ public class ObjectDetectionService : IObjectDetectionService
             ImageSize = detectionEvent.ImageBytes.Length,
             ImageName = detectionEvent.ImageName,
             DetectionDateTime = detectionEvent.ImageCreatedDateTime,
-            DetectionType = detectionEvent.DetectionType,
+            DetectionData = detectionEvent.DetectionData,
             RemoteStorageContainer = remoteStorageContainer,
             RemoteStorageFilePath = remoteStorageFilePath,
             Id = new Guid()
@@ -102,7 +102,7 @@ public class ObjectDetectionService : IObjectDetectionService
         DetectionMessage queueMessage = new()
         {
             QueueName = detectionQueue,
-            DetectionType = detectionEvent.DetectionType,
+            DetectionData = detectionEvent.DetectionData,
             CameraName = detectionEvent.CameraName,
             ImageCreatedDateTime = detectionEvent.ImageCreatedDateTime,
             ImageName = detectionEvent.ImageName,
