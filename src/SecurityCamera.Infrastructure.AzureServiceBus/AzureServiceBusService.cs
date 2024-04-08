@@ -53,6 +53,12 @@ IQueuePublisherService<DetectionMessage>
 
     public async Task GetMessageFromQueue(string queueName, EventHandler<ImageRecorderOnImagePushMessage> subscriber, CancellationToken cancellationToken)
     {
+        await GetMessageFromQueue(queueName, subscriber, 1, cancellationToken);
+    }
+
+    public async Task GetMessageFromQueue(string queueName, EventHandler<ImageRecorderOnImagePushMessage> subscriber, int maxProcessMessage,
+        CancellationToken cancellationToken)
+    {
         IQueueConsumerService<ImageRecorderOnImagePushMessage> consumer = this;
         consumer.MessageReceived += subscriber;
         int messageCount = 0;
@@ -90,7 +96,7 @@ IQueuePublisherService<DetectionMessage>
         processor.ProcessErrorAsync += ErrorHandler;
             
         await processor.StartProcessingAsync(cancellationToken);
-        while (messageCount == 0)
+        while (messageCount < maxProcessMessage)
             await Task.Delay(1000, cancellationToken);
         
         await processor.StopProcessingAsync(cancellationToken);
@@ -143,6 +149,12 @@ IQueuePublisherService<DetectionMessage>
 
     public async Task GetMessageFromQueue(string queueName, EventHandler<DetectionMessage> subscriber, CancellationToken cancellationToken)
     {
+        await GetMessageFromQueue(queueName, subscriber, 1, cancellationToken);
+    }
+
+    public async Task GetMessageFromQueue(string queueName, EventHandler<DetectionMessage> subscriber, int maxProcessMessage,
+        CancellationToken cancellationToken)
+    {
         IQueueConsumerService<DetectionMessage> consumer = this;
         consumer.MessageReceived += subscriber;
         int messageCount = 0;
@@ -180,12 +192,11 @@ IQueuePublisherService<DetectionMessage>
             
         await processor.StartProcessingAsync(cancellationToken);
         
-        while (messageCount == 0)
+        while (messageCount < maxProcessMessage)
             await Task.Delay(1000, cancellationToken);
         
         await processor.StopProcessingAsync(cancellationToken);
         await processor.CloseAsync(cancellationToken);
-        
     }
 
     public async Task<bool> SentMessageToQueue(DetectionMessage queueMessage, CancellationToken cancellationToken)

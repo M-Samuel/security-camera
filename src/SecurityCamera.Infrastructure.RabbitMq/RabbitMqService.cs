@@ -64,7 +64,13 @@ IQueuePublisherService<DetectionMessage>
         }
         await Task.CompletedTask;
     }
-    
+
+    public async Task GetMessageFromQueue(string queueName, EventHandler<ImageRecorderOnImagePushMessage> subscriber, int maxProcessMessage,
+        CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
+
     private event EventHandler<ImageRecorderOnImagePushMessage>? ImageRecorderMessageReceived;
     event EventHandler<ImageRecorderOnImagePushMessage>? IQueueConsumerService<ImageRecorderOnImagePushMessage>.MessageReceived
     {
@@ -144,7 +150,13 @@ IQueuePublisherService<DetectionMessage>
         }
         await Task.CompletedTask;
     }
-    
+
+    public async Task GetMessageFromQueue(string queueName, EventHandler<DetectionMessage> subscriber, int maxProcessMessage,
+        CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
+
     private event EventHandler<DetectionMessage>? DetectionMessageReceived;
     event EventHandler<DetectionMessage>? IQueueConsumerService<DetectionMessage>.MessageReceived
     {

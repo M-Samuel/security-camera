@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Reflection;
 using System.Text.Json;
 using SecurityCamera.Domain.ImageRecorderDomain.Events;
 using SecurityCamera.Domain.InfrastructureServices;
@@ -46,7 +47,10 @@ public class UltralyticsAiService : IAiDetectionService
 
     private async Task<string> RunUltralyticsAi(string imagePath, CancellationToken cancellationToken)
     {
-        string command = $"yolo predict model=yolov8n.pt source='{imagePath}' | python Output_parser.py";
+        string parserPath =
+            Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
+                "Output_parser.py");
+        string command = $"yolo predict model=yolov8n.pt source='{imagePath}' | python {parserPath}";
         var process = new Process()
         {
             StartInfo = new ProcessStartInfo

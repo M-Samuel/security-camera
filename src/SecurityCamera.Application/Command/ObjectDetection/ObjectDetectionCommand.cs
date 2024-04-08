@@ -44,6 +44,7 @@ public class ObjectDetectionCommand : ICommand<ObjectDetectionCommandData, Objec
         await _queueConsumerService.GetMessageFromQueue(
             commandData.ImageQueue,
             _eventHandler,
+            1000,
             cancellationToken);
 
         return await Task.FromResult(new ObjectDetectionCommandResult());
