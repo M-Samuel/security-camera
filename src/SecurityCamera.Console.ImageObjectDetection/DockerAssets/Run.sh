@@ -1,7 +1,7 @@
 #!/bin/bash
 while true
 do
-    dotnet /app/SecurityCamera.Console.ImageObjectDetection.dll \
+    /app/SecurityCamera.Console.ImageObjectDetection \
     --AzureServiceBusConnectionString=$EnvAzureServiceBusConnectionString \
     --AzureStorageConnectionString=$EnvAzureStorageConnectionString \
     --RemoteStorageContainer=$EnvRemoteStorageContainer \

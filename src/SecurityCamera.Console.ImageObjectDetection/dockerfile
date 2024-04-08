@@ -10,10 +10,9 @@ COPY ../ ./
 
 # Build the app.
 WORKDIR /src/SecurityCamera.Console.ImageObjectDetection
-RUN dotnet publish -a $TARGETARCH -c Release --self-contained false -o /build
+RUN dotnet publish -a $TARGETARCH -c Release --self-contained true -o /build
 
-# Build runtime image.
-FROM smb5d/security-camera-image-recorder-prebuild:latest
+FROM smb5d/security-camera-image-object-detection-prebuild:latest
 
 WORKDIR /app
 COPY --from=build-env /build .
