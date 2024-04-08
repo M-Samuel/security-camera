@@ -13,7 +13,7 @@ WORKDIR /src/SecurityCamera.Console.ImageObjectDetection
 RUN dotnet publish -a $TARGETARCH -c Release --self-contained false -o /build
 
 # Build runtime image.
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim
+FROM smb5d/security-camera-image-recorder-prebuild:latest
 
 WORKDIR /app
 COPY --from=build-env /build .

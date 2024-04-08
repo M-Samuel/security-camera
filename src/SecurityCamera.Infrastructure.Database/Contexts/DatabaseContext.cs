@@ -30,12 +30,8 @@ public class DatabaseContext : DbContext, IObjectDetectionEntity, IUnitOfWork
             .IsRequired();
         builder.Property(x => x.ImageSize)
             .IsRequired();
-        builder.Property(x => x.DetectionType)
-            .HasConversion(
-            v => v.ToString(),
-            v => (DetectionType)Enum.Parse(typeof(DetectionType), v)
-            )
-            .HasMaxLength(50)
+        builder.Property(x => x.DetectionData)
+            .HasMaxLength(200)
             .IsRequired();
         builder.Property(x => x.DetectionDateTime)
             .IsRequired();
