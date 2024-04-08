@@ -10,7 +10,7 @@ public class UltralyticsAiService : IAiDetectionService
 {
     public async Task<DetectionEvent[]> AnalyseImage(ImageRecordedEvent imageRecordedEvent, CancellationToken cancellationToken)
     {
-        string tempImagePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()+".png");
+        string tempImagePath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()+Path.GetExtension(imageRecordedEvent.ImageName));
         try{
             await WriteImageToDisk(imageRecordedEvent.ImageBytes, tempImagePath, cancellationToken);
             string result = await RunUltralyticsAi(tempImagePath, cancellationToken);
@@ -46,7 +46,7 @@ public class UltralyticsAiService : IAiDetectionService
 
     private async Task<string> RunUltralyticsAi(string imagePath, CancellationToken cancellationToken)
     {
-        string command = $"yolo predict model=yolov8n.pt source='{imagePath}' | Output_parser.py";
+        string command = $"yolo predict model=yolov8n.pt source='{imagePath}' | python Output_parser.py";
         var process = new Process()
         {
             StartInfo = new ProcessStartInfo

@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecurityCamera.Infrastructu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecurityCamera.Infrastructure.UltralyticsAi", "SecurityCamera.Infrastructure.UltralyticsAi\SecurityCamera.Infrastructure.UltralyticsAi.csproj", "{23D403CA-E4B2-46B3-B683-44E9B4B5E9F7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecurityCamera.Infrastructure.Tests", "SecurityCamera.Infrastructure.Tests\SecurityCamera.Infrastructure.Tests.csproj", "{8760ADEA-0F83-4BCB-802E-7730776123A5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -81,6 +83,10 @@ Global
 		{23D403CA-E4B2-46B3-B683-44E9B4B5E9F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{23D403CA-E4B2-46B3-B683-44E9B4B5E9F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{23D403CA-E4B2-46B3-B683-44E9B4B5E9F7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8760ADEA-0F83-4BCB-802E-7730776123A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8760ADEA-0F83-4BCB-802E-7730776123A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8760ADEA-0F83-4BCB-802E-7730776123A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8760ADEA-0F83-4BCB-802E-7730776123A5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
