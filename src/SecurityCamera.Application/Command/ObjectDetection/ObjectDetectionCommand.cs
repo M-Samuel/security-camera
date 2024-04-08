@@ -56,7 +56,6 @@ public class ObjectDetectionCommand : ICommand<ObjectDetectionCommandData, Objec
 
     private async Task ProcessMessageAsync(ImageRecorderOnImagePushMessage queueMessage)
     { 
-        GC.Collect();
         EventId eventId = new EventId((int)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds, Guid.NewGuid().ToString());
         try
         {
@@ -132,10 +131,6 @@ public class ObjectDetectionCommand : ICommand<ObjectDetectionCommandData, Objec
         {
             _logger.LogError(eventId, e, "Unexpected Error");
             throw;
-        }
-        finally
-        {
-            GC.Collect();
         }
         
     }
