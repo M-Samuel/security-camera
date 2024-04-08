@@ -18,9 +18,6 @@ IQueuePublisherService<DetectionMessage>
 
     private readonly object _objectLock;
 
-    private Task? _imageRecorderConsumerTask;
-    private Task? _detectionConsumerTask;
-
     public AzureServiceBusService(IConfiguration configuration, ILogger<AzureServiceBusService> logger)
     {
         ServiceBusClientOptions options = new ServiceBusClientOptions
@@ -58,38 +55,46 @@ IQueuePublisherService<DetectionMessage>
     {
         IQueueConsumerService<ImageRecorderOnImagePushMessage> consumer = this;
         consumer.MessageReceived += subscriber;
+        int messageCount = 0;
         
-        if (_imageRecorderConsumerTask == null)
+        ServiceBusProcessorOptions serviceBusProcessorOptions = new ServiceBusProcessorOptions()
         {
-            ServiceBusProcessorOptions serviceBusProcessorOptions = new ServiceBusProcessorOptions()
-            {
-                MaxConcurrentCalls = 1,
-                AutoCompleteMessages = false,
-            };
-            ServiceBusProcessor processor = _client.CreateProcessor(queueName, serviceBusProcessorOptions);
-            // add handler to process messages
-            processor.ProcessMessageAsync += async (args) =>
+            MaxConcurrentCalls = 1,
+            AutoCompleteMessages = false,
+        };
+        ServiceBusProcessor processor = _client.CreateProcessor(queueName, serviceBusProcessorOptions);
+        // add handler to process messages
+        processor.ProcessMessageAsync += async (args) =>
+        {
+            try
             {
                 ServiceBusReceivedMessage message = args.Message;
                 _logger.LogInformation($"Received message: {message.Body}");
-                ImageRecorderMessageReceived?.Invoke(this, message.Body.ToObjectFromJson<ImageRecorderOnImagePushMessage>());
+                ImageRecorderMessageReceived?.Invoke(this,
+                    message.Body.ToObjectFromJson<ImageRecorderOnImagePushMessage>());
                 await args.CompleteMessageAsync(args.Message, cancellationToken);
-            };
-
-            // add handler to process any errors
-            processor.ProcessErrorAsync += ErrorHandler;
-            
-            _imageRecorderConsumerTask = Task.Factory.StartNew(async () =>
+            }
+            catch(Exception e)
             {
-                // start processing 
-                await processor.StartProcessingAsync(cancellationToken);
-            }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
-        
+                await args.DeadLetterMessageAsync(args.Message, "Exception raised",
+                    $"{e.GetType()} - {e.Message} - {e.StackTrace}", cancellationToken);
+                throw;
+            }
+            finally
+            {
+                messageCount++;
+            }
+        };
 
-            await Task.CompletedTask;
-        }
+        // add handler to process any errors
+        processor.ProcessErrorAsync += ErrorHandler;
+            
+        await processor.StartProcessingAsync(cancellationToken);
+        while (messageCount == 0)
+            await Task.Delay(1000, cancellationToken);
         
-        
+        await processor.StopProcessingAsync(cancellationToken);
+        await processor.CloseAsync(cancellationToken);
     }
 
     Task ErrorHandler(ProcessErrorEventArgs args)
@@ -140,36 +145,46 @@ IQueuePublisherService<DetectionMessage>
     {
         IQueueConsumerService<DetectionMessage> consumer = this;
         consumer.MessageReceived += subscriber;
+        int messageCount = 0;
         
-        if (_detectionConsumerTask == null)
+        ServiceBusProcessorOptions serviceBusProcessorOptions = new ServiceBusProcessorOptions()
         {
-            ServiceBusProcessorOptions serviceBusProcessorOptions = new ServiceBusProcessorOptions()
-            {
-                MaxConcurrentCalls = 1,
-                AutoCompleteMessages = false,
-            };
-            ServiceBusProcessor processor = _client.CreateProcessor(queueName, serviceBusProcessorOptions);
-            // add handler to process messages
-            processor.ProcessMessageAsync += async (args) =>
+            MaxConcurrentCalls = 1,
+            AutoCompleteMessages = false,
+        };
+        ServiceBusProcessor processor = _client.CreateProcessor(queueName, serviceBusProcessorOptions);
+        // add handler to process messages
+        processor.ProcessMessageAsync += async (args) =>
+        {
+            try
             {
                 ServiceBusReceivedMessage message = args.Message;
                 _logger.LogInformation($"Received message: {message.Body}");
                 DetectionMessageReceived?.Invoke(this, message.Body.ToObjectFromJson<DetectionMessage>());
                 await args.CompleteMessageAsync(args.Message, cancellationToken);
-            };
-            
-            // add handler to process any errors
-            processor.ProcessErrorAsync += ErrorHandler;
-            
-            _detectionConsumerTask = Task.Factory.StartNew(async () =>
+            }
+            catch (Exception e)
             {
-                // start processing 
-                await processor.StartProcessingAsync(cancellationToken);
-            }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                await args.DeadLetterMessageAsync(args.Message, "Exception raised",
+                    $"{e.GetType()} - {e.Message} - {e.StackTrace}", cancellationToken);
+                throw;
+            }
+            finally
+            {
+                messageCount++;
+            }
+        };
+            
+        // add handler to process any errors
+        processor.ProcessErrorAsync += ErrorHandler;
+            
+        await processor.StartProcessingAsync(cancellationToken);
         
-
-            await Task.CompletedTask;
-        }
+        while (messageCount == 0)
+            await Task.Delay(1000, cancellationToken);
+        
+        await processor.StopProcessingAsync(cancellationToken);
+        await processor.CloseAsync(cancellationToken);
         
     }
 

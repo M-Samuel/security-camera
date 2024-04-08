@@ -33,10 +33,6 @@ public class Worker : BackgroundService
         EventId eventId = new EventId((int)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds, Guid.NewGuid().ToString());
         stoppingToken.ThrowIfCancellationRequested();
         await _objectDetectionCommand.ProcessCommandAsync(commandData, eventId, stoppingToken);
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            //Waiting for cancellation
-            await Task.Delay(5000, stoppingToken);
-        }
+        Environment.Exit(0);
     }
 }
