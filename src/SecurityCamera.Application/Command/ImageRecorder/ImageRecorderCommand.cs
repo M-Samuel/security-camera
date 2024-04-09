@@ -34,7 +34,7 @@ public class ImageRecorderCommand : ICommand<ImageRecorderCommandData, ImageReco
             };
 
         
-        foreach (ImageRecordedEvent imageRecordedEvent in imageRecordEvents)
+        foreach (ImageRecordedEvent imageRecordedEvent in imageRecordEvents.OrderBy(ev => ev.ImageCreatedDateTime))
         {
             string newImageName = $"{imageRecordedEvent.ImageCreatedDateTime:yyyyMMddHHmmss}_image.png";
             string remoteStorageFilePath = $"{commandData.RemoteStorageFileDirectory}/{newImageName}";
