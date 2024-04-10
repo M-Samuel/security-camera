@@ -16,8 +16,8 @@ public class UltralyticsAiService : IAiDetectionService
     {
         _modelName = "yolov5nu.pt";
         
-        if(!string.IsNullOrWhiteSpace(configuration[nameof(Args.ModelName)]))
-            _modelName = configuration[nameof(Args.ModelName)];
+        if(!string.IsNullOrWhiteSpace(configuration[nameof(Args.UltralyticsAiModelName)]))
+            _modelName = configuration[nameof(Args.UltralyticsAiModelName)];
     }
     
     public async Task<DetectionEvent[]> AnalyseImage(ImageRecordedEvent imageRecordedEvent, CancellationToken cancellationToken)
