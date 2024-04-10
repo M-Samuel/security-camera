@@ -8,7 +8,7 @@ public class UltralyticsAiServiceTests
     [SetUp]
     public void Setup()
     {
-        _sut = new UltralyticsAiService();
+        _sut = new UltralyticsAiService(default);
     }
 
     [Test]
