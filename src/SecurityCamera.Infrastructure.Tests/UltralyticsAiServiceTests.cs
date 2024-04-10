@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Configuration;
+using NSubstitute;
 using SecurityCamera.Infrastructure.UltralyticsAi;
 
 namespace SecurityCamera.Infrastructure.Tests;
@@ -8,7 +10,8 @@ public class UltralyticsAiServiceTests
     [SetUp]
     public void Setup()
     {
-        _sut = new UltralyticsAiService();
+        IConfiguration configuration = Substitute.For<IConfiguration>();
+        _sut = new UltralyticsAiService(configuration);
     }
 
     [Test]
