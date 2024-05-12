@@ -8,7 +8,8 @@ do
     --RemoteStorageFileDirectory=$EnvRemoteStorageFileDirectory \
     --ServiceBusQueueImageRecords=$EnvServiceBusQueueImageRecords \
     --ServiceBusQueueDetections=$EnvServiceBusQueueDetections \ 
-    --UltralyticsAiModelName=$EnvUltralyticsAiModelName
+    --AzureComputerVisionEndpoint=$EnvAzureComputerVisionEndpoint \
+    --AzureComputerVisionKey=$EnvAzureComputerVisionKey 
     
     echo "Image Object Detection crashed Respawning after 5s.."
     sleep 5
