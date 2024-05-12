@@ -12,7 +12,7 @@ COPY ../ ./
 WORKDIR /src/SecurityCamera.Console.ImageObjectDetection
 RUN dotnet publish -a $TARGETARCH -c Release --self-contained true -o /build
 
-FROM smb5d/security-camera-image-object-detection-prebuild:latest
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim
 
 WORKDIR /app
 COPY --from=build-env /build .
