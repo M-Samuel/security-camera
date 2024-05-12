@@ -17,6 +17,7 @@ using BlobEnvVars = SecurityCamera.Infrastructure.AzureBlobStorage.EnvVars;
 using BusEnvVars = SecurityCamera.Infrastructure.AzureServiceBus.EnvVars;
 using VisionEnvVars = SecurityCamera.Infrastructure.AzureComputerVision.EnvVars;
 using DomainArgs = SecurityCamera.Domain.ObjectDetectionDomain.Args;
+using DatabaseArgs = SecurityCamera.Infrastructure.Database.EnvVars;
 
 var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddHostedService<Worker>();
@@ -28,6 +29,7 @@ RegisterCrossCuttingConcerns(builder);
 
 ValidateArgs(builder.Configuration);
 var host = builder.Build();
+MigrateDatabase(host.Services);
 host.Run();
 
 
@@ -48,14 +50,25 @@ static void RegisterInfrastructure(HostApplicationBuilder hostApplicationBuilder
     hostApplicationBuilder.Services.AddSingleton<IRemoteStorageService, AzureBlobStorageService>();
 
     hostApplicationBuilder.Services.AddSingleton<IAiDetectionService, AzureComputerVisionAiDetectionService>();
+
+    string sqlServerConnectionString = hostApplicationBuilder.Configuration[nameof(DatabaseArgs.AzureSqlServerConnectionString)] ?? string.Empty;
+    if (!string.IsNullOrWhiteSpace(sqlServerConnectionString))
+    {
+        hostApplicationBuilder.Services.AddDbContext<DatabaseContext>(
+            options => options
+                .UseLoggerFactory(LoggerFactory.Create(builder => builder.AddConsole().AddDebug()))
+                .UseSqlServer(sqlServerConnectionString));
+    }
+    else
+    {
+        hostApplicationBuilder.Services.AddDbContext<DatabaseContext>(
+            options => options
+                .UseLoggerFactory(LoggerFactory.Create(builder => builder.AddConsole().AddDebug()))
+                .UseInMemoryDatabase("SecurityCameraDb")
+                .EnableDetailedErrors()
+                .ConfigureWarnings(b => b.Ignore(InMemoryEventId.TransactionIgnoredWarning)));
+    }
     
-    hostApplicationBuilder.Services.AddDbContext<DatabaseContext>(
-    options => options
-            .UseLoggerFactory(LoggerFactory.Create(builder => builder.AddConsole().AddDebug()))
-            // .UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=Test")
-            .UseInMemoryDatabase("SecurityCameraDb")
-            .EnableDetailedErrors()
-            .ConfigureWarnings(b => b.Ignore(InMemoryEventId.TransactionIgnoredWarning)));
 
     #pragma warning disable CS8603 // Possible null reference return.
     hostApplicationBuilder.Services.AddScoped<IUnitOfWork>(s => s.GetService<DatabaseContext>());
@@ -89,4 +102,19 @@ static void ValidateArgs(IConfiguration configuration)
         throw new ArgumentNullException(nameof(VisionEnvVars.AzureComputerVisionEndpoint));
     if(string.IsNullOrWhiteSpace(configuration[nameof(VisionEnvVars.AzureComputerVisionKey)]))
         throw new ArgumentNullException(nameof(VisionEnvVars.AzureComputerVisionKey));
+}
+
+static void MigrateDatabase(IServiceProvider hostServices)
+{
+    if(Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") != "Development")
+        return;
+    
+    var serviceScopeFactory = hostServices.GetService<IServiceScopeFactory>();
+    if (serviceScopeFactory != null)
+    {
+        using var scope = serviceScopeFactory.CreateScope();
+        using var context = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
+        if (context.Database.ProviderName != "Microsoft.EntityFrameworkCore.InMemory")
+            context.Database.Migrate();
+    }
 }
