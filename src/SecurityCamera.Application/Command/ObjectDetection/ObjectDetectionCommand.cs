@@ -15,7 +15,6 @@ public class ObjectDetectionCommand : ICommand<ObjectDetectionCommandData, Objec
     private readonly IQueueConsumerService<ImageRecorderOnImagePushMessage> _queueConsumerService;
     private readonly IRemoteStorageService _remoteStorageService;
     private ObjectDetectionCommandData? _commandData;
-    private EventId _eventId;
     private CancellationToken _cancellationToken;
     private EventHandler<ImageRecorderOnImagePushMessage>? _eventHandler;
     private readonly IServiceScopeFactory _serviceScopeFactory;
@@ -36,7 +35,6 @@ public class ObjectDetectionCommand : ICommand<ObjectDetectionCommandData, Objec
     public async Task<ObjectDetectionCommandResult> ProcessCommandAsync(ObjectDetectionCommandData commandData, EventId eventId, CancellationToken cancellationToken)
     {
         _commandData = commandData;
-        _eventId = eventId;
         _cancellationToken = cancellationToken;
         _eventHandler = Handle;
         

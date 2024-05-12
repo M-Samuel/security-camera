@@ -4,7 +4,6 @@ using SecurityCamera.Domain.ImageRecorderDomain;
 using SecurityCamera.Domain.InfrastructureServices;
 using SecurityCamera.Infrastructure.AzureBlobStorage;
 using SecurityCamera.Infrastructure.AzureServiceBus;
-using RabbitMqArgs = SecurityCamera.Infrastructure.RabbitMq.Args;
 using BlobEnvVars = SecurityCamera.Infrastructure.AzureBlobStorage.EnvVars;
 using BusEnvVars = SecurityCamera.Infrastructure.AzureServiceBus.EnvVars;
 using DomainArgs = SecurityCamera.Domain.ImageRecorderDomain.Args;
@@ -52,12 +51,8 @@ static void ValidateArgs(IConfiguration configuration)
         throw new ArgumentNullException(nameof(DomainArgs.CameraName));
     if(string.IsNullOrWhiteSpace(configuration[nameof(DomainArgs.ServiceBusQueueImageRecords)]))
         throw new ArgumentNullException(nameof(DomainArgs.ServiceBusQueueImageRecords));
-    // if(string.IsNullOrWhiteSpace(configuration[nameof(RabbitMqArgs.RoutingKey)]))
-    //     throw new ArgumentNullException(nameof(RabbitMqArgs.RoutingKey));
     if(string.IsNullOrWhiteSpace(configuration[nameof(DomainArgs.ImagesDirPath)]))
         throw new ArgumentNullException(nameof(DomainArgs.ImagesDirPath));
-    // if(string.IsNullOrWhiteSpace(configuration[nameof(RabbitMqArgs.RabbitMqHostName)]))
-    //     throw new ArgumentNullException(nameof(RabbitMqArgs.RabbitMqHostName));
 
     if(string.IsNullOrWhiteSpace(configuration[nameof(DomainArgs.RemoteStorageContainer)]))
         throw new ArgumentNullException(nameof(DomainArgs.RemoteStorageContainer));

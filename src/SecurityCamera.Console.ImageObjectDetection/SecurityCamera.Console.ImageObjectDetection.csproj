@@ -10,10 +10,9 @@
      <ItemGroup>
         <ProjectReference Include="..\SecurityCamera.Application\SecurityCamera.Application.csproj" />
         <ProjectReference Include="..\SecurityCamera.Domain\SecurityCamera.Domain.csproj" />
+        <ProjectReference Include="..\SecurityCamera.Infrastructure.AzureComputerVision\SecurityCamera.Infrastructure.AzureComputerVision.csproj" />
         <ProjectReference Include="..\SecurityCamera.Infrastructure.Database\SecurityCamera.Infrastructure.Database.csproj" />
         <!-- <ProjectReference Include="..\SecurityCamera.Infrastructure.OnnxAi\SecurityCamera.Infrastructure.OnnxAi.csproj" /> -->
-        <ProjectReference Include="..\SecurityCamera.Infrastructure.UltralyticsAi\SecurityCamera.Infrastructure.UltralyticsAi.csproj" />
-        <ProjectReference Include="..\SecurityCamera.Infrastructure.RabbitMq\SecurityCamera.Infrastructure.RabbitMq.csproj" />
         <ProjectReference Include="..\SecurityCamera.SharedKernel\SecurityCamera.SharedKernel.csproj" />
         <ProjectReference Include="..\SecurityCamera.Infrastructure.AzureServiceBus\SecurityCamera.Infrastructure.AzureServiceBus.csproj" />
         <ProjectReference Include="..\SecurityCamera.Infrastructure.AzureBlobStorage\SecurityCamera.Infrastructure.AzureBlobStorage.csproj" />
