@@ -41,7 +41,7 @@ public class AzureComputerVisionAiDetectionService : IAiDetectionService
         _logger.LogInformation($" Objects:");
         foreach (DetectedObject detectedObject in result.Objects.Values)
         {
-            if(detectedObject.Tags.First().Name == "person")
+            if(detectedObject.Tags.First().Name != "car")
                 continue;
             
             _logger.LogInformation($"   Object: '{detectedObject.Tags.First().Name}', Bounding box {detectedObject.BoundingBox}");
