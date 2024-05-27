@@ -27,6 +27,7 @@ public class TfLiteAiService : IAiDetectionService
         string imagePath = Path.GetTempFileName();
         await File.WriteAllBytesAsync(imagePath, imageRecordedEvent.ImageBytes);
         TfDetection[]? detections = await LaunchTfLiteScript(imagePath, cancellationToken);
+        File.Delete(imagePath);
         if(detections == null)
             return Array.Empty<DetectionEvent>();
         
