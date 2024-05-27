@@ -6,5 +6,5 @@ public interface IQueueConsumerService<T> : IDisposable where T : QueueMessage
 {
     event EventHandler<T> MessageReceived;
     Task GetMessageFromQueue(string queueName, EventHandler<T> subscriber, CancellationToken cancellationToken);
-    Task GetMessageFromQueue(string queueName, EventHandler<T> subscriber, int maxProcessMessage, CancellationToken cancellationToken);
+    Task GetMessageFromQueue(string queueName, EventHandler<T> subscriber, int maxConcurrent, CancellationToken cancellationToken);
 }
