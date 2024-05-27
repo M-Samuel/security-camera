@@ -16,6 +16,7 @@
         <ProjectReference Include="..\SecurityCamera.SharedKernel\SecurityCamera.SharedKernel.csproj" />
         <ProjectReference Include="..\SecurityCamera.Infrastructure.AzureServiceBus\SecurityCamera.Infrastructure.AzureServiceBus.csproj" />
         <ProjectReference Include="..\SecurityCamera.Infrastructure.AzureBlobStorage\SecurityCamera.Infrastructure.AzureBlobStorage.csproj" />
+        <ProjectReference Include="..\SecurityCamera.Infrastructure.TensorflowLite.ObjectDetection\SecurityCamera.Infrastructure.TensorflowLite.ObjectDetection.csproj" />
     </ItemGroup>
 
     <ItemGroup>

@@ -12,7 +12,16 @@ COPY ../ ./
 WORKDIR /src/SecurityCamera.Console.ImageObjectDetection
 RUN dotnet publish -a $TARGETARCH -c Release --self-contained true -o /build
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim
+FROM python:3.9.19-slim-bookworm
+
+RUN apt update
+
+RUN apt install -y libglib2.0-0 libgl1-mesa-glx libusb-1.0-0 curl
+
+WORKDIR /tflite
+COPY --from=build-env /src/SecurityCamera.Infrastructure.TensorflowLite.ObjectDetection/TF_Files .
+
+RUN /tflite/setup.sh
 
 WORKDIR /app
 COPY --from=build-env /build .

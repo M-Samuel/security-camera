@@ -23,7 +23,7 @@ from tflite_support.task import processor
 from tflite_support.task import vision
 
 
-def run(model: str, num_threads: int, enable_edgetpu: bool, image_path:str) -> None:
+def run(model: str, num_threads: int, enable_edgetpu: bool, image_path:str, result_json_path:str) -> None:
   """Continuously run inference on images acquired from the camera.
 
   Args:
@@ -57,15 +57,18 @@ def run(model: str, num_threads: int, enable_edgetpu: bool, image_path:str) -> N
     box = detection.bounding_box
     for category in detection.categories:
       d = {}
-      d['category_name'] = category.category_name
-      d['score'] = category.score
-      d['origin_x'] = box.origin_x
-      d['origin_y'] = box.origin_y
-      d['width'] = box.width
-      d['height'] = box.height
+      d['CategoryName'] = category.category_name
+      d['Score'] = category.score
+      d['OriginX'] = box.origin_x
+      d['OriginY'] = box.origin_y
+      d['Width'] = box.width
+      d['Height'] = box.height
       detections.append(d)
   
-  print(json.dumps(detections, indent=4))
+  print(json.dumps(detections))
+
+  with open(result_json_path, "w") as text_file:
+    text_file.write(json.dumps(detections))
 
 
 
@@ -82,6 +85,10 @@ def main():
       help='Path of the image',
       required=True)
   parser.add_argument(
+      '--resultJsonPath',
+      help='Path of the json result',
+      required=True)
+  parser.add_argument(
       '--numThreads',
       help='Number of CPU threads to run the model.',
       required=False,
@@ -95,7 +102,7 @@ def main():
       default=False)
   args = parser.parse_args()
 
-  run(args.model, int(args.numThreads), bool(args.enableEdgeTPU), args.imagePath)
+  run(args.model, int(args.numThreads), bool(args.enableEdgeTPU), args.imagePath, args.resultJsonPath)
 
 
 if __name__ == '__main__':

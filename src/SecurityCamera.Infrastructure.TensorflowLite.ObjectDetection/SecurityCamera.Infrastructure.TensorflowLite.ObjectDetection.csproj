@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\SecurityCamera.Domain\SecurityCamera.Domain.csproj" />
+    <ProjectReference Include="..\SecurityCamera.SharedKernel\SecurityCamera.SharedKernel.csproj" />
+  </ItemGroup>
+
 </Project>
