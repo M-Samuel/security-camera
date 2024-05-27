@@ -56,16 +56,15 @@ IQueuePublisherService<DetectionMessage>
         await GetMessageFromQueue(queueName, subscriber, 1, cancellationToken);
     }
 
-    public async Task GetMessageFromQueue(string queueName, EventHandler<ImageRecorderOnImagePushMessage> subscriber, int maxProcessMessage,
+    public async Task GetMessageFromQueue(string queueName, EventHandler<ImageRecorderOnImagePushMessage> subscriber, int maxConcurrent,
         CancellationToken cancellationToken)
     {
         IQueueConsumerService<ImageRecorderOnImagePushMessage> consumer = this;
         consumer.MessageReceived += subscriber;
-        int messageCount = 0;
         
         ServiceBusProcessorOptions serviceBusProcessorOptions = new ServiceBusProcessorOptions()
         {
-            MaxConcurrentCalls = 1,
+            MaxConcurrentCalls = maxConcurrent,
             AutoCompleteMessages = false,
         };
         ServiceBusProcessor processor = _client.CreateProcessor(queueName, serviceBusProcessorOptions);
@@ -86,17 +85,13 @@ IQueuePublisherService<DetectionMessage>
                     $"{e.GetType()} - {e.Message} - {e.StackTrace}", cancellationToken);
                 throw;
             }
-            finally
-            {
-                messageCount++;
-            }
         };
 
         // add handler to process any errors
         processor.ProcessErrorAsync += ErrorHandler;
             
         await processor.StartProcessingAsync(cancellationToken);
-        while (messageCount < maxProcessMessage)
+        while (!cancellationToken.IsCancellationRequested)
             await Task.Delay(1000, cancellationToken);
         
         await processor.StopProcessingAsync(cancellationToken);
@@ -152,16 +147,15 @@ IQueuePublisherService<DetectionMessage>
         await GetMessageFromQueue(queueName, subscriber, 1, cancellationToken);
     }
 
-    public async Task GetMessageFromQueue(string queueName, EventHandler<DetectionMessage> subscriber, int maxProcessMessage,
+    public async Task GetMessageFromQueue(string queueName, EventHandler<DetectionMessage> subscriber, int maxConcurrent,
         CancellationToken cancellationToken)
     {
         IQueueConsumerService<DetectionMessage> consumer = this;
         consumer.MessageReceived += subscriber;
-        int messageCount = 0;
         
         ServiceBusProcessorOptions serviceBusProcessorOptions = new ServiceBusProcessorOptions()
         {
-            MaxConcurrentCalls = 1,
+            MaxConcurrentCalls = maxConcurrent,
             AutoCompleteMessages = false,
         };
         ServiceBusProcessor processor = _client.CreateProcessor(queueName, serviceBusProcessorOptions);
@@ -181,10 +175,6 @@ IQueuePublisherService<DetectionMessage>
                     $"{e.GetType()} - {e.Message} - {e.StackTrace}", cancellationToken);
                 throw;
             }
-            finally
-            {
-                messageCount++;
-            }
         };
             
         // add handler to process any errors
@@ -192,7 +182,7 @@ IQueuePublisherService<DetectionMessage>
             
         await processor.StartProcessingAsync(cancellationToken);
         
-        while (messageCount < maxProcessMessage)
+        while (!cancellationToken.IsCancellationRequested)
             await Task.Delay(1000, cancellationToken);
         
         await processor.StopProcessingAsync(cancellationToken);

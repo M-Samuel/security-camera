@@ -42,7 +42,7 @@ public class ObjectDetectionCommand : ICommand<ObjectDetectionCommandData, Objec
         await _queueConsumerService.GetMessageFromQueue(
             commandData.ImageQueue,
             _eventHandler,
-            1000,
+            maxConcurrent:3,
             cancellationToken);
 
         return await Task.FromResult(new ObjectDetectionCommandResult());
@@ -103,6 +103,14 @@ public class ObjectDetectionCommand : ICommand<ObjectDetectionCommandData, Objec
             }
 
             DetectionEvent[] detectionEvents = detectionResult.Value;
+            if(detectionEvents.Length == 0)
+            {
+                await _remoteStorageService.DeleteRemoteStorageFile(_commandData.RemoteStorageContainer, remoteStorageFilePath, _cancellationToken);
+                _logger.LogInformation(eventId, $"No detection found deleting file from remote storage: {remoteStorageFilePath}");
+                return;
+            }
+
+
             foreach(DetectionEvent detectionEvent in detectionEvents)
             {
                 var saveResult = await objectDetectionService.SaveDetectionToDb(detectionEvent,

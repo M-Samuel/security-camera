@@ -18,6 +18,8 @@ using BusEnvVars = SecurityCamera.Infrastructure.AzureServiceBus.EnvVars;
 using VisionEnvVars = SecurityCamera.Infrastructure.AzureComputerVision.EnvVars;
 using DomainArgs = SecurityCamera.Domain.ObjectDetectionDomain.Args;
 using DatabaseArgs = SecurityCamera.Infrastructure.Database.EnvVars;
+using TfEnvArgs = SecurityCamera.Infrastructure.TensorflowLite.ObjectDetection.EnvVars;
+using SecurityCamera.Infrastructure.TensorflowLite.ObjectDetection;
 
 var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddHostedService<Worker>();
@@ -49,7 +51,7 @@ static void RegisterInfrastructure(HostApplicationBuilder hostApplicationBuilder
     hostApplicationBuilder.Services.AddSingleton<IQueueConsumerService<ImageRecorderOnImagePushMessage>, AzureServiceBusService>();
     hostApplicationBuilder.Services.AddSingleton<IRemoteStorageService, AzureBlobStorageService>();
 
-    hostApplicationBuilder.Services.AddSingleton<IAiDetectionService, AzureComputerVisionAiDetectionService>();
+    hostApplicationBuilder.Services.AddSingleton<IAiDetectionService, TfLiteAiService>();
 
     string sqlServerConnectionString = hostApplicationBuilder.Configuration[nameof(DatabaseArgs.AzureSqlServerConnectionString)] ?? string.Empty;
     if (!string.IsNullOrWhiteSpace(sqlServerConnectionString))
@@ -98,10 +100,13 @@ static void ValidateArgs(IConfiguration configuration)
         throw new ArgumentNullException(nameof(DomainArgs.ServiceBusQueueImageRecords));
     if(string.IsNullOrWhiteSpace(configuration[nameof(DomainArgs.ServiceBusQueueDetections)]))
         throw new ArgumentNullException(nameof(DomainArgs.ServiceBusQueueDetections));
-    if(string.IsNullOrWhiteSpace(configuration[nameof(VisionEnvVars.AzureComputerVisionEndpoint)]))
-        throw new ArgumentNullException(nameof(VisionEnvVars.AzureComputerVisionEndpoint));
-    if(string.IsNullOrWhiteSpace(configuration[nameof(VisionEnvVars.AzureComputerVisionKey)]))
-        throw new ArgumentNullException(nameof(VisionEnvVars.AzureComputerVisionKey));
+
+    if(string.IsNullOrWhiteSpace(configuration[nameof(TfEnvArgs.TensorflowLiteDetectScriptPath)]))
+        throw new ArgumentNullException(nameof(TfEnvArgs.TensorflowLiteDetectScriptPath));
+    // if(string.IsNullOrWhiteSpace(configuration[nameof(VisionEnvVars.AzureComputerVisionEndpoint)]))
+    //     throw new ArgumentNullException(nameof(VisionEnvVars.AzureComputerVisionEndpoint));
+    // if(string.IsNullOrWhiteSpace(configuration[nameof(VisionEnvVars.AzureComputerVisionKey)]))
+    //     throw new ArgumentNullException(nameof(VisionEnvVars.AzureComputerVisionKey));
 }
 
 static void MigrateDatabase(IServiceProvider hostServices)
