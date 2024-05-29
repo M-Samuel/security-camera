@@ -33,8 +33,8 @@ IQueuePublisherService<DetectionMessage>
         Task.Factory.StartNew(async () => await _client.DisposeAsync());
     }
 
-    private event EventHandler<ImageRecorderOnImagePushMessage>? ImageRecorderMessageReceived;
-    event EventHandler<ImageRecorderOnImagePushMessage>? IQueueConsumerService<ImageRecorderOnImagePushMessage>.MessageReceived
+    private event AsyncEventHandler<ImageRecorderOnImagePushMessage>? ImageRecorderMessageReceived;
+    event AsyncEventHandler<ImageRecorderOnImagePushMessage>? IQueueConsumerService<ImageRecorderOnImagePushMessage>.MessageReceived
     {
         add {
             lock (_objectLock)
@@ -51,12 +51,12 @@ IQueuePublisherService<DetectionMessage>
         }
     }
 
-    public async Task GetMessageFromQueue(string queueName, EventHandler<ImageRecorderOnImagePushMessage> subscriber, CancellationToken cancellationToken)
+    public async Task GetMessageFromQueue(string queueName, AsyncEventHandler<ImageRecorderOnImagePushMessage> subscriber, CancellationToken cancellationToken)
     {
         await GetMessageFromQueue(queueName, subscriber, 1, cancellationToken);
     }
 
-    public async Task GetMessageFromQueue(string queueName, EventHandler<ImageRecorderOnImagePushMessage> subscriber, int maxConcurrent,
+    public async Task GetMessageFromQueue(string queueName, AsyncEventHandler<ImageRecorderOnImagePushMessage> subscriber, int maxConcurrent,
         CancellationToken cancellationToken)
     {
         IQueueConsumerService<ImageRecorderOnImagePushMessage> consumer = this;
@@ -75,15 +75,16 @@ IQueuePublisherService<DetectionMessage>
             {
                 ServiceBusReceivedMessage message = args.Message;
                 _logger.LogInformation($"Received message: {message.Body}");
-                ImageRecorderMessageReceived?.Invoke(this,
-                    message.Body.ToObjectFromJson<ImageRecorderOnImagePushMessage>());
+
+                if(ImageRecorderMessageReceived != null)
+                    await ImageRecorderMessageReceived(this, message.Body.ToObjectFromJson<ImageRecorderOnImagePushMessage>());
+
                 await args.CompleteMessageAsync(args.Message, cancellationToken);
             }
             catch(Exception e)
             {
                 await args.DeadLetterMessageAsync(args.Message, "Exception raised",
                     $"{e.GetType()} - {e.Message} - {e.StackTrace}", cancellationToken);
-                throw;
             }
         };
 
@@ -125,8 +126,8 @@ IQueuePublisherService<DetectionMessage>
         }
     }
 
-    private event EventHandler<DetectionMessage>? DetectionMessageReceived;
-    event EventHandler<DetectionMessage>? IQueueConsumerService<DetectionMessage>.MessageReceived
+    private event AsyncEventHandler<DetectionMessage>? DetectionMessageReceived;
+    event AsyncEventHandler<DetectionMessage>? IQueueConsumerService<DetectionMessage>.MessageReceived
     {
         add {
             lock (_objectLock)
@@ -142,12 +143,12 @@ IQueuePublisherService<DetectionMessage>
         }
     }
 
-    public async Task GetMessageFromQueue(string queueName, EventHandler<DetectionMessage> subscriber, CancellationToken cancellationToken)
+    public async Task GetMessageFromQueue(string queueName, AsyncEventHandler<DetectionMessage> subscriber, CancellationToken cancellationToken)
     {
         await GetMessageFromQueue(queueName, subscriber, 1, cancellationToken);
     }
 
-    public async Task GetMessageFromQueue(string queueName, EventHandler<DetectionMessage> subscriber, int maxConcurrent,
+    public async Task GetMessageFromQueue(string queueName, AsyncEventHandler<DetectionMessage> subscriber, int maxConcurrent,
         CancellationToken cancellationToken)
     {
         IQueueConsumerService<DetectionMessage> consumer = this;
@@ -166,14 +167,16 @@ IQueuePublisherService<DetectionMessage>
             {
                 ServiceBusReceivedMessage message = args.Message;
                 _logger.LogInformation($"Received message: {message.Body}");
-                DetectionMessageReceived?.Invoke(this, message.Body.ToObjectFromJson<DetectionMessage>());
+
+                if(DetectionMessageReceived != null)
+                    await DetectionMessageReceived(this, message.Body.ToObjectFromJson<DetectionMessage>());
+
                 await args.CompleteMessageAsync(args.Message, cancellationToken);
             }
             catch (Exception e)
             {
                 await args.DeadLetterMessageAsync(args.Message, "Exception raised",
                     $"{e.GetType()} - {e.Message} - {e.StackTrace}", cancellationToken);
-                throw;
             }
         };
             
