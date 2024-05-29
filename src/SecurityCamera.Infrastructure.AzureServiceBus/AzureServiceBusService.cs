@@ -53,12 +53,21 @@ IQueuePublisherService<DetectionMessage>
 
     public async Task GetMessageFromQueue(string queueName, AsyncEventHandler<ImageRecorderOnImagePushMessage> subscriber, CancellationToken cancellationToken)
     {
-        await GetMessageFromQueue(queueName, subscriber, 1, cancellationToken);
+        await GetMessageFromQueue(queueName, subscriber, 1, int.MaxValue, cancellationToken);
+    }
+    
+    public async Task GetMessageFromQueue(string queueName, AsyncEventHandler<ImageRecorderOnImagePushMessage> subscriber, int maxConcurrent, CancellationToken cancellationToken)
+    {
+        await GetMessageFromQueue(queueName, subscriber, maxConcurrent, int.MaxValue, cancellationToken);
     }
 
-    public async Task GetMessageFromQueue(string queueName, AsyncEventHandler<ImageRecorderOnImagePushMessage> subscriber, int maxConcurrent,
+    public async Task GetMessageFromQueue(string queueName, AsyncEventHandler<ImageRecorderOnImagePushMessage> subscriber, int maxConcurrent, int maxCount, 
         CancellationToken cancellationToken)
     {
+        int count = 0;
+        CancellationTokenSource innerCts = new CancellationTokenSource();
+        cancellationToken.Register(() => innerCts.Cancel());
+        
         IQueueConsumerService<ImageRecorderOnImagePushMessage> consumer = this;
         consumer.MessageReceived += subscriber;
         
@@ -86,13 +95,18 @@ IQueuePublisherService<DetectionMessage>
                 await args.DeadLetterMessageAsync(args.Message, "Exception raised",
                     $"{e.GetType()} - {e.Message} - {e.StackTrace}", cancellationToken);
             }
+            if(++count >= maxCount)
+                await innerCts.CancelAsync();
         };
 
         // add handler to process any errors
         processor.ProcessErrorAsync += ErrorHandler;
             
         await processor.StartProcessingAsync(cancellationToken);
-        await Task.Delay(Timeout.Infinite, cancellationToken);
+        try{
+            await Task.Delay(Timeout.Infinite, innerCts.Token);
+        }
+        catch(TaskCanceledException){}
         
         await processor.StopProcessingAsync(cancellationToken);
         await processor.CloseAsync(cancellationToken);
@@ -144,12 +158,21 @@ IQueuePublisherService<DetectionMessage>
 
     public async Task GetMessageFromQueue(string queueName, AsyncEventHandler<DetectionMessage> subscriber, CancellationToken cancellationToken)
     {
-        await GetMessageFromQueue(queueName, subscriber, 1, cancellationToken);
+        await GetMessageFromQueue(queueName, subscriber, 1, int.MaxValue, cancellationToken);
+    }
+    
+    public async Task GetMessageFromQueue(string queueName, AsyncEventHandler<DetectionMessage> subscriber, int maxConcurrent, CancellationToken cancellationToken)
+    {
+        await GetMessageFromQueue(queueName, subscriber, maxConcurrent, int.MaxValue, cancellationToken);
     }
 
-    public async Task GetMessageFromQueue(string queueName, AsyncEventHandler<DetectionMessage> subscriber, int maxConcurrent,
+    public async Task GetMessageFromQueue(string queueName, AsyncEventHandler<DetectionMessage> subscriber, int maxConcurrent, int maxCount,
         CancellationToken cancellationToken)
     {
+        int count = 0;
+        CancellationTokenSource innerCts = new CancellationTokenSource();
+        cancellationToken.Register(() => innerCts.Cancel());
+        
         IQueueConsumerService<DetectionMessage> consumer = this;
         consumer.MessageReceived += subscriber;
         
@@ -177,14 +200,18 @@ IQueuePublisherService<DetectionMessage>
                 await args.DeadLetterMessageAsync(args.Message, "Exception raised",
                     $"{e.GetType()} - {e.Message} - {e.StackTrace}", cancellationToken);
             }
+            if(++count >= maxCount)
+                await innerCts.CancelAsync();
         };
             
         // add handler to process any errors
         processor.ProcessErrorAsync += ErrorHandler;
             
         await processor.StartProcessingAsync(cancellationToken);
-        
-        await Task.Delay(Timeout.Infinite, cancellationToken);
+        try{
+            await Task.Delay(Timeout.Infinite, innerCts.Token);
+        }
+        catch(TaskCanceledException){}
         
         await processor.StopProcessingAsync(cancellationToken);
         await processor.CloseAsync(cancellationToken);

@@ -8,14 +8,12 @@ public class Worker : BackgroundService
     private readonly ILogger<Worker> _logger;
     private readonly IConfiguration _configuration;
     private readonly ObjectDetectionCommand _objectDetectionCommand;
-    private readonly IServiceScopeFactory _serviceScopeFactory;
 
-    public Worker(ILogger<Worker> logger, IConfiguration configuration, ObjectDetectionCommand objectDetectionCommand, IServiceScopeFactory serviceScopeFactory)
+    public Worker(ILogger<Worker> logger, IConfiguration configuration, ObjectDetectionCommand objectDetectionCommand)
     {
         _logger = logger;
         _configuration = configuration;
         _objectDetectionCommand = objectDetectionCommand;
-        _serviceScopeFactory = serviceScopeFactory;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
