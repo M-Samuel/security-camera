@@ -95,7 +95,7 @@ IQueuePublisherService<DetectionMessage>
                 await args.DeadLetterMessageAsync(args.Message, "Exception raised",
                     $"{e.GetType()} - {e.Message} - {e.StackTrace}", cancellationToken);
             }
-            if(count > maxCount)
+            if(++count >= maxCount)
                 await innerCts.CancelAsync();
         };
 
@@ -103,7 +103,10 @@ IQueuePublisherService<DetectionMessage>
         processor.ProcessErrorAsync += ErrorHandler;
             
         await processor.StartProcessingAsync(cancellationToken);
-        await Task.Delay(Timeout.Infinite, innerCts.Token);
+        try{
+            await Task.Delay(Timeout.Infinite, innerCts.Token);
+        }
+        catch(TaskCanceledException){}
         
         await processor.StopProcessingAsync(cancellationToken);
         await processor.CloseAsync(cancellationToken);
@@ -197,7 +200,7 @@ IQueuePublisherService<DetectionMessage>
                 await args.DeadLetterMessageAsync(args.Message, "Exception raised",
                     $"{e.GetType()} - {e.Message} - {e.StackTrace}", cancellationToken);
             }
-            if(count > maxCount)
+            if(++count >= maxCount)
                 await innerCts.CancelAsync();
         };
             
@@ -205,7 +208,10 @@ IQueuePublisherService<DetectionMessage>
         processor.ProcessErrorAsync += ErrorHandler;
             
         await processor.StartProcessingAsync(cancellationToken);
-        await Task.Delay(Timeout.Infinite, cancellationToken);
+        try{
+            await Task.Delay(Timeout.Infinite, innerCts.Token);
+        }
+        catch(TaskCanceledException){}
         
         await processor.StopProcessingAsync(cancellationToken);
         await processor.CloseAsync(cancellationToken);
