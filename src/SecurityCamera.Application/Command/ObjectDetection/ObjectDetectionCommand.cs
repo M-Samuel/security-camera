@@ -43,6 +43,7 @@ public class ObjectDetectionCommand : ICommand<ObjectDetectionCommandData, Objec
             commandData.ImageQueue,
             _eventHandler,
             maxConcurrent:1,
+            maxCount:10,
             cancellationToken);
 
         return await Task.FromResult(new ObjectDetectionCommandResult());
