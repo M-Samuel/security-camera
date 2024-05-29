@@ -16,7 +16,7 @@ public class ObjectDetectionCommand : ICommand<ObjectDetectionCommandData, Objec
     private readonly IRemoteStorageService _remoteStorageService;
     private ObjectDetectionCommandData? _commandData;
     private CancellationToken _cancellationToken;
-    private EventHandler<ImageRecorderOnImagePushMessage>? _eventHandler;
+    private AsyncEventHandler<ImageRecorderOnImagePushMessage>? _eventHandler;
     private readonly IServiceScopeFactory _serviceScopeFactory;
 
     public ObjectDetectionCommand(
@@ -36,7 +36,7 @@ public class ObjectDetectionCommand : ICommand<ObjectDetectionCommandData, Objec
     {
         _commandData = commandData;
         _cancellationToken = cancellationToken;
-        _eventHandler = Handle;
+        _eventHandler += ProcessMessageAsync;
         
         
         await _queueConsumerService.GetMessageFromQueue(
@@ -48,12 +48,7 @@ public class ObjectDetectionCommand : ICommand<ObjectDetectionCommandData, Objec
         return await Task.FromResult(new ObjectDetectionCommandResult());
     }
 
-    public void Handle(object? sender, ImageRecorderOnImagePushMessage queueMessage)
-    {
-        Task.Run(() => ProcessMessageAsync(queueMessage), _cancellationToken).GetAwaiter().GetResult();
-    }
-
-    private async Task ProcessMessageAsync(ImageRecorderOnImagePushMessage queueMessage)
+    private async Task ProcessMessageAsync(object sender, ImageRecorderOnImagePushMessage queueMessage)
     { 
         EventId eventId = new EventId((int)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds, Guid.NewGuid().ToString());
         try
