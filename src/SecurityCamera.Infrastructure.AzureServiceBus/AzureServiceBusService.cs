@@ -92,8 +92,7 @@ IQueuePublisherService<DetectionMessage>
         processor.ProcessErrorAsync += ErrorHandler;
             
         await processor.StartProcessingAsync(cancellationToken);
-        while (!cancellationToken.IsCancellationRequested)
-            await Task.Delay(1000, cancellationToken);
+        await Task.Delay(Timeout.Infinite, cancellationToken);
         
         await processor.StopProcessingAsync(cancellationToken);
         await processor.CloseAsync(cancellationToken);
@@ -185,8 +184,7 @@ IQueuePublisherService<DetectionMessage>
             
         await processor.StartProcessingAsync(cancellationToken);
         
-        while (!cancellationToken.IsCancellationRequested)
-            await Task.Delay(1000, cancellationToken);
+        await Task.Delay(Timeout.Infinite, cancellationToken);
         
         await processor.StopProcessingAsync(cancellationToken);
         await processor.CloseAsync(cancellationToken);
