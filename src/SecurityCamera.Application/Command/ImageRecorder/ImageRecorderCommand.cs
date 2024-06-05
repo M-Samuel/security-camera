@@ -36,7 +36,8 @@ public class ImageRecorderCommand : ICommand<ImageRecorderCommandData, ImageReco
         
         foreach (ImageRecordedEvent imageRecordedEvent in imageRecordEvents.OrderBy(ev => ev.ImageCreatedDateTime))
         {
-            string newImageName = $"{imageRecordedEvent.ImageCreatedDateTime:yyyyMMddHHmmss}_{Guid.NewGuid()}.png";
+            string extension = Path.GetExtension(imageRecordedEvent.ImageName);
+            string newImageName = $"{imageRecordedEvent.ImageCreatedDateTime:yyyyMMddHHmmss}_{Guid.NewGuid()}.{extension}";
             string remoteStorageFilePath = $"{commandData.RemoteStorageFileDirectory}/{newImageName}";
             var saveToRemoteResult = await _imageRecorderService.SaveImageToRemoteStorage(imageRecordedEvent, commandData.RemoteStorageContainer, remoteStorageFilePath, cancellationToken);
             if(saveToRemoteResult.HasError){
