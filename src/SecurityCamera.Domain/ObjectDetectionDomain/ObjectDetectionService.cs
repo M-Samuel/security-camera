@@ -77,7 +77,7 @@ public class ObjectDetectionService : IObjectDetectionService
             DetectionData = detectionEvent.DetectionData,
             RemoteStorageContainer = remoteStorageContainer,
             RemoteStorageFilePath = remoteStorageFilePath,
-            Id = new Guid()
+            Id = Guid.NewGuid()
         };
         await _objectDetectionWriteRepository.SaveImageDetection(imageDetection, cancellationToken);
 
