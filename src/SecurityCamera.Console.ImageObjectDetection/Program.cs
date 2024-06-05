@@ -31,7 +31,7 @@ RegisterCrossCuttingConcerns(builder);
 
 ValidateArgs(builder.Configuration);
 var host = builder.Build();
-MigrateDatabase(host.Services);
+// MigrateDatabase(host.Services);
 host.Run();
 
 
@@ -53,31 +53,8 @@ static void RegisterInfrastructure(HostApplicationBuilder hostApplicationBuilder
 
     hostApplicationBuilder.Services.AddSingleton<IAiDetectionService, TfLiteAiService>();
 
-    string sqlServerConnectionString = hostApplicationBuilder.Configuration[nameof(DatabaseArgs.AzureSqlServerConnectionString)] ?? string.Empty;
-    if (!string.IsNullOrWhiteSpace(sqlServerConnectionString))
-    {
-        hostApplicationBuilder.Services.AddDbContext<DatabaseContext>(
-            options => options
-                .UseLoggerFactory(LoggerFactory.Create(builder => builder.AddConsole().AddDebug()))
-                .UseSqlServer(sqlServerConnectionString));
-    }
-    else
-    {
-        hostApplicationBuilder.Services.AddDbContext<DatabaseContext>(
-            options => options
-                .UseLoggerFactory(LoggerFactory.Create(builder => builder.AddConsole().AddDebug()))
-                .UseInMemoryDatabase("SecurityCameraDb")
-                .EnableDetailedErrors()
-                .ConfigureWarnings(b => b.Ignore(InMemoryEventId.TransactionIgnoredWarning)));
-    }
-    
-
-    #pragma warning disable CS8603 // Possible null reference return.
-    hostApplicationBuilder.Services.AddScoped<IUnitOfWork>(s => s.GetService<DatabaseContext>());
-    #pragma warning restore CS8603 // Possible null reference return.
-
-    hostApplicationBuilder.Services.AddScoped<IObjectDetectionReadRepository, ObjectDetectionRepository>();
-    hostApplicationBuilder.Services.AddScoped<IObjectDetectionWriteRepository, ObjectDetectionRepository>();
+    //RegisterRelationalDatabase(hostApplicationBuilder);
+    RegisterAzureTableStorage(hostApplicationBuilder);
 }
 
 static void RegisterCrossCuttingConcerns(HostApplicationBuilder hostApplicationBuilder)
@@ -122,4 +99,38 @@ static void MigrateDatabase(IServiceProvider hostServices)
         if (context.Database.ProviderName != "Microsoft.EntityFrameworkCore.InMemory")
             context.Database.Migrate();
     }
+}
+
+static void RegisterRelationalDatabase(HostApplicationBuilder hostApplicationBuilder)
+{
+    string sqlServerConnectionString = hostApplicationBuilder.Configuration[nameof(DatabaseArgs.AzureSqlServerConnectionString)] ?? string.Empty;
+    if (!string.IsNullOrWhiteSpace(sqlServerConnectionString))
+    {
+        hostApplicationBuilder.Services.AddDbContext<DatabaseContext>(
+            options => options
+                .UseLoggerFactory(LoggerFactory.Create(builder => builder.AddConsole().AddDebug()))
+                .UseSqlServer(sqlServerConnectionString));
+    }
+    else
+    {
+        hostApplicationBuilder.Services.AddDbContext<DatabaseContext>(
+            options => options
+                .UseLoggerFactory(LoggerFactory.Create(builder => builder.AddConsole().AddDebug()))
+                .UseInMemoryDatabase("SecurityCameraDb")
+                .EnableDetailedErrors()
+                .ConfigureWarnings(b => b.Ignore(InMemoryEventId.TransactionIgnoredWarning)));
+    }
+
+
+#pragma warning disable CS8603 // Possible null reference return.
+    hostApplicationBuilder.Services.AddScoped<IUnitOfWork>(s => s.GetService<DatabaseContext>());
+#pragma warning restore CS8603 // Possible null reference return.
+}
+
+static void RegisterAzureTableStorage(HostApplicationBuilder hostApplicationBuilder)
+{
+    hostApplicationBuilder.Services.AddScoped<SecurityCamera.Infrastructure.AzureStorageTable.ObjectDetectionRepository>();
+    hostApplicationBuilder.Services.AddScoped<IObjectDetectionReadRepository>(s => s.GetRequiredService<SecurityCamera.Infrastructure.AzureStorageTable.ObjectDetectionRepository>());
+    hostApplicationBuilder.Services.AddScoped<IObjectDetectionWriteRepository>(s => s.GetRequiredService<SecurityCamera.Infrastructure.AzureStorageTable.ObjectDetectionRepository>());
+    hostApplicationBuilder.Services.AddScoped<IUnitOfWork>(s => s.GetRequiredService<SecurityCamera.Infrastructure.AzureStorageTable.ObjectDetectionRepository>());
 }
