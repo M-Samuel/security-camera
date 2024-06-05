@@ -129,6 +129,7 @@ static void RegisterRelationalDatabase(HostApplicationBuilder hostApplicationBui
 
 static void RegisterAzureTableStorage(HostApplicationBuilder hostApplicationBuilder)
 {
+    hostApplicationBuilder.Services.AddSingleton<SecurityCamera.Infrastructure.AzureStorageTable.TableClientsProvider>();
     hostApplicationBuilder.Services.AddScoped<SecurityCamera.Infrastructure.AzureStorageTable.ObjectDetectionRepository>();
     hostApplicationBuilder.Services.AddScoped<IObjectDetectionReadRepository>(s => s.GetRequiredService<SecurityCamera.Infrastructure.AzureStorageTable.ObjectDetectionRepository>());
     hostApplicationBuilder.Services.AddScoped<IObjectDetectionWriteRepository>(s => s.GetRequiredService<SecurityCamera.Infrastructure.AzureStorageTable.ObjectDetectionRepository>());

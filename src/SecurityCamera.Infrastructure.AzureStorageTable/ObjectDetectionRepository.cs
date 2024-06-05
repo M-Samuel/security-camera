@@ -12,21 +12,15 @@ public class ObjectDetectionRepository : IObjectDetectionReadRepository, IObject
 {
     private List<TableTransactionAction> transactionActions = new List<TableTransactionAction>();
     private readonly TableClient _tableClient;
-    private bool isTableCreated = false;
 
-    public ObjectDetectionRepository(IConfiguration configuration)
+    public ObjectDetectionRepository(TableClientsProvider tableClientsProvider)
     {
-        TableServiceClient tableServiceClient = new TableServiceClient(configuration[nameof(EnvVars.AzureTableStorageConnectionString)]);
-        _tableClient = tableServiceClient.GetTableClient(
-            tableName: $"{nameof(ImageDetection)}s"
-        );
-
+        _tableClient = tableClientsProvider.GetTableClientByKey($"{nameof(ImageDetection)}s");
     }
 
 
     public async Task<ImageDetection[]> GetAllDetectionByDate(DateOnly detectionDate, CancellationToken cancellationToken)
     {
-        await CreateTableIfNotExists(cancellationToken);
         var queryTable = _tableClient.QueryAsync<ImageDetectionExt>(filter: i => DateOnly.FromDateTime(i.DetectionDateTime) == detectionDate, cancellationToken: cancellationToken);
         var array = await queryTable.AsAsyncEnumerable().ToArrayAsync();
         return array;
@@ -38,21 +32,13 @@ public class ObjectDetectionRepository : IObjectDetectionReadRepository, IObject
         return response.Value.Count;
     }
 
-    public async Task SaveImageDetection(ImageDetection imageRecordedEvent, CancellationToken cancellationToken)
+    public Task SaveImageDetection(ImageDetection imageRecordedEvent, CancellationToken cancellationToken)
     {
-        await CreateTableIfNotExists(cancellationToken);
         ImageDetectionExt imageDetectionExt = MapTo(imageRecordedEvent);
         transactionActions.Add(new TableTransactionAction(TableTransactionActionType.Add, imageDetectionExt));
+        return Task.CompletedTask;
     }
 
-    private async Task CreateTableIfNotExists(CancellationToken cancellationToken)
-    {
-        if (!isTableCreated)
-        {
-            await _tableClient.CreateIfNotExistsAsync(cancellationToken);
-            isTableCreated = true;
-        }
-    }
 
     private static ImageDetectionExt MapTo(ImageDetection imageDetection)
     {
