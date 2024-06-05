@@ -99,24 +99,26 @@ public class ObjectDetectionCommand : ICommand<ObjectDetectionCommandData, Objec
             }
 
             DetectionEvent[] detectionEvents = detectionResult.Value;
-            if(detectionEvents.Length == 0)
+            if (detectionEvents.Length == 0)
             {
-                await _remoteStorageService.DeleteRemoteStorageFile(_commandData.RemoteStorageContainer, remoteStorageFilePath, _cancellationToken);
-                _logger.LogInformation(eventId, $"No detection found deleting file from remote storage: {remoteStorageFilePath}");
+                await _remoteStorageService.DeleteRemoteStorageFile(_commandData.RemoteStorageContainer,
+                    remoteStorageFilePath, _cancellationToken);
+                _logger.LogInformation(eventId,
+                    $"No detection found deleting file from remote storage: {remoteStorageFilePath}");
                 return;
             }
 
 
-            foreach(DetectionEvent detectionEvent in detectionEvents)
+            foreach (DetectionEvent detectionEvent in detectionEvents)
             {
                 var saveResult = await objectDetectionService.SaveDetectionToDb(detectionEvent,
-                _commandData.RemoteStorageContainer, remoteStorageFilePath, _cancellationToken);
+                    _commandData.RemoteStorageContainer, remoteStorageFilePath, _cancellationToken);
                 if (saveResult.HasError)
                 {
                     _logger.ProcessApplicationErrors(saveResult.DomainErrors, eventId);
                     return;
                 }
-                
+
                 _logger.LogInformation(eventId, "Detection saved To DB");
 
                 var pushResult = await objectDetectionService.PushDetectionToQueue(_commandData.DetectionQueue,
@@ -127,9 +129,23 @@ public class ObjectDetectionCommand : ICommand<ObjectDetectionCommandData, Objec
 
                 _logger.LogInformation(eventId, $"Detection push to queue {_commandData.DetectionQueue}");
             }
+
             await unitOfWork.SaveAsync(_cancellationToken);
         }
-
+        catch (DetectionFailedException dfe)
+        {
+            if (dfe.Message.Contains("cv2.error") && dfe.Message.Contains("cv2.COLOR_BGR2RGB"))
+            {
+                _logger.LogError(eventId, dfe, $"Image corrupted, deleting {queueMessage.RemoteStorageFilePath}");
+                await _remoteStorageService.DeleteRemoteStorageFile(queueMessage.RemoteStorageContainer,
+                    queueMessage.RemoteStorageFilePath, _cancellationToken);
+            }
+            else
+            {
+                _logger.LogError(eventId, dfe, "Unexpected Error");
+                throw;
+            }
+        }
         catch (Exception e)
         {
             _logger.LogError(eventId, e, "Unexpected Error");

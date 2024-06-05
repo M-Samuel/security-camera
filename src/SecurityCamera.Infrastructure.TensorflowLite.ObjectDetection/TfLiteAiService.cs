@@ -1,10 +1,10 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SecurityCamera.Domain.ImageRecorderDomain.Events;
 using SecurityCamera.Domain.InfrastructureServices;
+using SecurityCamera.Domain.ObjectDetectionDomain;
 using SecurityCamera.Domain.ObjectDetectionDomain.Events;
 
 namespace SecurityCamera.Infrastructure.TensorflowLite.ObjectDetection;
@@ -25,7 +25,7 @@ public class TfLiteAiService : IAiDetectionService
     public async Task<DetectionEvent[]> AnalyseImage(ImageRecordedEvent imageRecordedEvent, CancellationToken cancellationToken)
     {
         string imagePath = Path.GetTempFileName();
-        await File.WriteAllBytesAsync(imagePath, imageRecordedEvent.ImageBytes);
+        await File.WriteAllBytesAsync(imagePath, imageRecordedEvent.ImageBytes, cancellationToken);
         TfDetection[]? detections = await LaunchTfLiteScript(imagePath, cancellationToken);
         File.Delete(imagePath);
         if(detections == null)
@@ -76,7 +76,7 @@ public class TfLiteAiService : IAiDetectionService
             await process.WaitForExitAsync(cancellationToken);
 
             if(process.ExitCode != 0)
-                throw new InvalidOperationException($"Tf Failed: {process.StandardOutput.ReadToEnd()}, {process.StandardError.ReadToEnd()}");
+                throw new DetectionFailedException($"Tf Failed: {process.StandardOutput.ReadToEnd()}, {process.StandardError.ReadToEnd()}");
 
         }
 
