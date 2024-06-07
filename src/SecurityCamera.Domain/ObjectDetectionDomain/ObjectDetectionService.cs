@@ -77,6 +77,11 @@ public class ObjectDetectionService : IObjectDetectionService
             DetectionData = detectionEvent.DetectionData,
             RemoteStorageContainer = remoteStorageContainer,
             RemoteStorageFilePath = remoteStorageFilePath,
+            Score = detectionEvent.Score,
+            OriginX = detectionEvent.OriginX,
+            OriginY = detectionEvent.OriginY,
+            Width = detectionEvent.Width,
+            Height = detectionEvent.Height,
             Id = Guid.NewGuid()
         };
         await _objectDetectionWriteRepository.SaveImageDetection(imageDetection, cancellationToken);
@@ -107,7 +112,12 @@ public class ObjectDetectionService : IObjectDetectionService
             ImageCreatedDateTime = detectionEvent.ImageCreatedDateTime,
             ImageName = detectionEvent.ImageName,
             RemoteStorageContainer = remoteStorageContainer,
-            RemoteStorageFilePath = remoteStorageFilePath
+            RemoteStorageFilePath = remoteStorageFilePath,
+            Score = detectionEvent.Score,
+            OriginX = detectionEvent.OriginX,
+            OriginY = detectionEvent.OriginY,
+            Width = detectionEvent.Width,
+            Height = detectionEvent.Height,
         };
         bool messageSent = await _queuePublisherService.SentMessageToQueue(queueMessage, cancellationToken);
         await _remoteStorageService.UploadRemoteStorageFile(remoteStorageContainer, remoteStorageFilePath, detectionEvent.ImageBytes, cancellationToken);
