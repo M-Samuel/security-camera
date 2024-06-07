@@ -46,7 +46,12 @@ public class TfLiteAiService : IAiDetectionService
             ImageBytes: imageRecordedEvent.ImageBytes,
             ImageCreatedDateTime: imageRecordedEvent.ImageCreatedDateTime,
             ImageName: imageRecordedEvent.ImageName,
-            DetectionData: tfd.CategoryName
+            DetectionData: tfd.CategoryName,
+            Score: tfd.Score,
+            OriginX: tfd.OriginX,
+            OriginY: tfd.OriginY,
+            Width: tfd.Width,
+            Height: tfd.Height
         )).ToArray();
 
 

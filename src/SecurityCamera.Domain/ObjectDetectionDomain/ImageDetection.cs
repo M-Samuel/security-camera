@@ -12,4 +12,9 @@ public class ImageDetection : IEntity
     public required DateTime DetectionDateTime { get; set; }
     public required string RemoteStorageContainer { get; set; }
     public required string RemoteStorageFilePath { get; set; }
+    public double? Score { get; set; }
+    public int? OriginX { get; set; }
+    public int? OriginY { get; set; }
+    public int? Width { get; set; }
+    public int? Height { get; set; }
 }
