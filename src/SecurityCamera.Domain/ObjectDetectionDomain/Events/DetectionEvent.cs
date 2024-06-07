@@ -8,5 +8,10 @@ public record DetectionEvent(
     byte[] ImageBytes,
     string ImageName, 
     DateTime ImageCreatedDateTime,
-    string DetectionData
+    string DetectionData,
+    double? Score,
+    int? OriginX,
+    int? OriginY,
+    int? Width,
+    int? Height 
     ) : IDomainEvent;

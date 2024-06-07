@@ -41,6 +41,11 @@ public class DatabaseContext : DbContext, IObjectDetectionEntity, IUnitOfWork
         builder.Property(x => x.RemoteStorageFilePath)
             .HasMaxLength(2000)
             .IsRequired();
+        builder.Property(x => x.Score);
+        builder.Property(x => x.OriginX);
+        builder.Property(x => x.OriginY);
+        builder.Property(x => x.Width);
+        builder.Property(x => x.Height);
     }
 
     public async Task<int> SaveAsync(CancellationToken cancellationToken)

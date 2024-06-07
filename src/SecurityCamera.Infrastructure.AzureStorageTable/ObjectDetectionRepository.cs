@@ -51,6 +51,11 @@ public class ObjectDetectionRepository : IObjectDetectionReadRepository, IObject
             RemoteStorageContainer = imageDetection.RemoteStorageContainer,
             RemoteStorageFilePath = imageDetection.RemoteStorageFilePath,
             Id = imageDetection.Id,
+            Score = imageDetection.Score,
+            OriginX = imageDetection.OriginX,
+            OriginY = imageDetection.OriginY,
+            Width = imageDetection.Width,
+            Height = imageDetection.Height,
             RowKey = imageDetection.Id.ToString(),
             PartitionKey = imageDetection.CameraName
         };

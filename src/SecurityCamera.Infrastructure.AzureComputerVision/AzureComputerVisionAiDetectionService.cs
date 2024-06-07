@@ -52,7 +52,12 @@ public class AzureComputerVisionAiDetectionService : IAiDetectionService
                     imageRecordedEvent.ImageBytes,
                     imageRecordedEvent.ImageName,
                     imageRecordedEvent.ImageCreatedDateTime,
-                    detectedObject.Tags.First().Name
+                    detectedObject.Tags.First().Name,
+                    detectedObject.Tags.First().Confidence,
+                    detectedObject.BoundingBox.X,
+                    detectedObject.BoundingBox.Y,
+                    detectedObject.BoundingBox.Width,
+                    detectedObject.BoundingBox.Height
                 )
             );
         }
@@ -60,8 +65,6 @@ public class AzureComputerVisionAiDetectionService : IAiDetectionService
         _logger.LogInformation($" People:");
         foreach (DetectedPerson person in result.People.Values)
         {
-            if (person.Confidence < 0.5)
-                continue;
             _logger.LogInformation($"   Person: Bounding box {person.BoundingBox}, Confidence: {person.Confidence:F4}");
             
             detectionEvents.Add(
@@ -71,7 +74,12 @@ public class AzureComputerVisionAiDetectionService : IAiDetectionService
                     imageRecordedEvent.ImageBytes,
                     imageRecordedEvent.ImageName,
                     imageRecordedEvent.ImageCreatedDateTime,
-                    "Person"
+                    "person",
+                    person.Confidence,
+                    person.BoundingBox.X,
+                    person.BoundingBox.Y,
+                    person.BoundingBox.Width,
+                    person.BoundingBox.Height
                 )
             );
         }
