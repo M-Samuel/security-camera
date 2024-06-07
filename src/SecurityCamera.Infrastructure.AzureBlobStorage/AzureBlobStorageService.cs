@@ -4,6 +4,7 @@ using Azure;
 using Azure.Storage;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SecurityCamera.Domain.InfrastructureServices;
@@ -14,6 +15,7 @@ public class AzureBlobStorageService : IRemoteStorageService
 {
     private readonly BlobServiceClient _blobServiceClient;
     private readonly ILogger<AzureBlobStorageService> _logger;
+    private readonly FileExtensionContentTypeProvider _fileExtensionContentTypeProvider = new FileExtensionContentTypeProvider();
 
     private readonly ConcurrentDictionary<string, BlobContainerClient> _blobContainerClients = new ();
 
@@ -123,13 +125,14 @@ public class AzureBlobStorageService : IRemoteStorageService
     {
         try
         {
-            
+
             BlobContainerClient containerClient =
                 await GetContainerClient(containerName, cancellationToken: cancellationToken);
-            
+
             BlobClient blobClient = containerClient.GetBlobClient(filePath);
             BinaryData binaryData = new BinaryData(fileBytes);
-            var response = await blobClient.UploadAsync(binaryData, true, cancellationToken);
+            BlobUploadOptions blobUploadOptions = CreateBlobOptionWithMimeType(filePath);
+            var response = await blobClient.UploadAsync(binaryData, blobUploadOptions, cancellationToken);
             if (response == null)
                 throw new InvalidOperationException($"Unable to upload file to {filePath}");
             if (!response.HasValue)
@@ -157,6 +160,23 @@ public class AzureBlobStorageService : IRemoteStorageService
         }
     }
 
+    private BlobUploadOptions CreateBlobOptionWithMimeType(string filePath)
+    {
+        BlobUploadOptions blobUploadOptions = new BlobUploadOptions();
+        if (_fileExtensionContentTypeProvider.TryGetContentType(Path.GetFileName(filePath), out string? mimeType))
+        {
+            if (mimeType != null)
+            {
+                blobUploadOptions.HttpHeaders = new BlobHttpHeaders()
+                {
+                    ContentType = mimeType
+                };
+            }
+        }
+
+        return blobUploadOptions;
+    }
+
     public async Task<RemoteStorageFile> UploadRemoteStorageFile(string containerName, string filePath, Stream stream, CancellationToken cancellationToken)
     {
         try
@@ -166,7 +186,8 @@ public class AzureBlobStorageService : IRemoteStorageService
                 await GetContainerClient(containerName, cancellationToken: cancellationToken);
             
             BlobClient blobClient = containerClient.GetBlobClient(filePath);
-            var response = await blobClient.UploadAsync(stream, true, cancellationToken);
+            BlobUploadOptions blobUploadOptions = CreateBlobOptionWithMimeType(filePath);
+            var response = await blobClient.UploadAsync(stream, blobUploadOptions, cancellationToken);
             stream.Close();
             if (response == null)
                 throw new InvalidOperationException($"Unable to upload file to {filePath}");
@@ -217,12 +238,11 @@ public class AzureBlobStorageService : IRemoteStorageService
                 MaximumTransferSize = 4 * 1024 * 1024
             };
 
-            var uploadOptions = new BlobUploadOptions()
-            {
-                TransferOptions = transferOptions
-            };
             
-            var response = await blobClient.UploadAsync(stream, uploadOptions, cancellationToken);
+            BlobUploadOptions blobUploadOptions = CreateBlobOptionWithMimeType(filePath);
+            blobUploadOptions.TransferOptions = transferOptions;
+            
+            var response = await blobClient.UploadAsync(stream, blobUploadOptions, cancellationToken);
             stream.Close();
             if (response == null)
                 throw new InvalidOperationException($"Unable to upload file to {filePath}");
